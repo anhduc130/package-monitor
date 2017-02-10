@@ -109,6 +109,13 @@ agreement for further details.
 		(line (pt 0 208)(pt 16 208))
 	)
 	(port
+		(pt 0 224)
+		(input)
+		(text "Camera_RxData" (rect 0 0 92 14)(font "Arial" (font_size 8)))
+		(text "Camera_RxData" (rect 21 219 113 233)(font "Arial" (font_size 8)))
+		(line (pt 0 224)(pt 16 224))
+	)
+	(port
 		(pt 304 32)
 		(output)
 		(text "DataOut[7..0]" (rect 0 0 74 14)(font "Arial" (font_size 8)))
@@ -156,6 +163,13 @@ agreement for further details.
 		(text "WiFi_TxData" (rect 0 0 70 14)(font "Arial" (font_size 8)))
 		(text "WiFi_TxData" (rect 213 123 283 137)(font "Arial" (font_size 8)))
 		(line (pt 304 128)(pt 288 128))
+	)
+	(port
+		(pt 304 144)
+		(output)
+		(text "Camera_TxData" (rect 0 0 90 14)(font "Arial" (font_size 8)))
+		(text "Camera_TxData" (rect 193 139 283 153)(font "Arial" (font_size 8)))
+		(line (pt 304 144)(pt 288 144))
 	)
 	(drawing
 		(rectangle (rect 16 16 288 240))

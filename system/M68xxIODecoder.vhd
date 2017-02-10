@@ -18,7 +18,9 @@ entity M68xxIODecoder is
 		TouchScreen_Port_Enable : out std_logic;
 		TouchScreen_Baud_Enable : out std_logic;
 		WiFi_Port_Enable			: out std_logic;
-		WiFi_Baud_Enable			: out std_logic
+		WiFi_Baud_Enable			: out std_logic;
+		Camera_Port_Enable		: out std_logic;
+		Camera_Baud_Enable		: out std_logic
 	);
 end ;
 
@@ -53,6 +55,9 @@ Begin
 		
 		WiFi_Port_Enable				<= '0';
 		WiFi_Baud_Enable				<= '0';
+		
+		Camera_Port_Enable			<= '0';
+		Camera_Baud_Enable			<= '0';
 	
 
 -- IOSelect_H comes from the Avalon to External Bridge (see tutorial 1.8a) and is driven to logic 1 whenever the 
@@ -210,6 +215,35 @@ Begin
 
 				if(Address(3 downto 0) = X"4") then				
 					wifi_Baud_Enable <= '1' ;
+				end if ;
+			end if ;
+		end if ;
+		
+-- decoder for the 6th 6850 chip (Camera)- 2 internal byte wide registers at addresses 0x8400_0250 and 0x8400_0252
+-- Status Register (read only) and Command Register (write only) are at location 0x8400_0250
+-- Transmit Data Register (write only) and Received Data Register (read only) are at location 0x8400_0252
+-- Each byte wide register is connected to the lower half of the 16 bit data bus coming from the bridge
+-- i.e. data bus on D7-D0. The signal ByteSelect_L will be '0' when data is being transferred over the bridge data lines D7-D0
+-- 
+-- decoder for the Baud Rate generator. 1 internal (write only) register at address 0x8400_0254 data on D7-D0 
+-- and ByteSelect_L = 0
+		
+		if(IOSelect_H = '1') then		-- if Avalon to External Bridge being accessed by CPU
+
+-- if address in range hex 8400_025X
+
+			if((Address(15 downto 4) = X"025") and ByteSelect_L = '0') then	
+	
+-- if address is hex 8400_0250 or hex 8400_0242
+
+			   if((Address(3 downto 0) = X"0") or (Address(3 downto 0) = X"2")) then	
+					Camera_Port_Enable <= '1' ;		-- enable the ACIA device
+			   end if ;
+				
+-- if address is hex 8400_0254 enable baud rate generator 
+
+				if(Address(3 downto 0) = X"4") then				
+					Camera_Baud_Enable <= '1' ;
 				end if ;
 			end if ;
 		end if ;

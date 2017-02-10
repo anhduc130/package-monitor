@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
 #include "serial.h"
 #define isascii(c)  ((c & ~0x7F) == 0)
 
@@ -192,32 +193,29 @@ void Wifi_Init(void) {
 	// set up 6850 Control Register to utilise a divide by 16 clock,
 	// set RTS low, use 8 bits of data, no parity, 1 stop bit,
 	// transmitter interrupt disabled
-	Wifi_Control = 0x15;
+	Wifi_Control = 0x55;
 
 	// set 115200 Baud
 	Wifi_Baud = 0x01;
 
-	usleep(500000);
+	usleep(100000);
 }
 
 
 /*****************************************************************************
-* Wait until ready for command
+* Wait until ready for command, stores onscreen stuff into buf
 *****************************************************************************/
-void Wifi_WaitReady(void) {
-	char val = Wifi_ReadRx();
-	if(isascii(val)) {
-		printf("%c",val);
-	}
+int Wifi_WaitReady(char* buf) {
+	char val = 0;
+	int i = 0;
 	// keep reading the incoming data
 	while(val != '>') {
 		val = Wifi_ReadRx();
-		if(isascii(val)) {
-			printf("%c",val);
-		}
+		buf[i] = val;
+		i++;
 	}
-	Wifi_SendCommand("\r\n");
-	printf('\n');
+//	Wifi_SendCommand("\r\n");
+	return i;
 }
 
 
@@ -228,10 +226,11 @@ void Wifi_SendCommand(const char * command) {
 	int cur_1=0;
 	while(command[cur_1] != '\n') {
 		Wifi_WriteTx(command[cur_1]);
-		printf("%c",command[cur_1]);
 		cur_1++;
 	}
 	Wifi_WriteTx(command[cur_1]);
+
+	usleep(200000);
 }
 
 

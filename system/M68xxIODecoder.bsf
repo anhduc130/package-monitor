@@ -21,9 +21,9 @@ agreement for further details.
 */
 (header "symbol" (version "1.1"))
 (symbol
-	(rect 16 16 288 224)
+	(rect 16 16 288 256)
 	(text "M68xxIODecoder" (rect 5 0 75 12)(font "Arial" ))
-	(text "inst" (rect 8 192 20 204)(font "Arial" ))
+	(text "inst" (rect 8 224 20 236)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -115,7 +115,21 @@ agreement for further details.
 		(text "WiFi_Baud_Enable" (rect 174 171 251 183)(font "Arial" ))
 		(line (pt 272 176)(pt 256 176)(line_width 1))
 	)
+	(port
+		(pt 272 192)
+		(output)
+		(text "Camera_Port_Enable" (rect 0 0 88 12)(font "Arial" ))
+		(text "Camera_Port_Enable" (rect 163 187 251 199)(font "Arial" ))
+		(line (pt 272 192)(pt 256 192)(line_width 1))
+	)
+	(port
+		(pt 272 208)
+		(output)
+		(text "Camera_Baud_Enable" (rect 0 0 92 12)(font "Arial" ))
+		(text "Camera_Baud_Enable" (rect 159 203 251 215)(font "Arial" ))
+		(line (pt 272 208)(pt 256 208)(line_width 1))
+	)
 	(drawing
-		(rectangle (rect 16 16 256 192)(line_width 1))
+		(rectangle (rect 16 16 256 224)(line_width 1))
 	)
 )

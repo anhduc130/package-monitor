@@ -23,6 +23,8 @@ int main() {
 
 	printf("Starting Program\n");
 
+	char print_buf[512];
+
 	// Initialize Hardware
 	Wifi_Init();
 	TS_Init();
@@ -30,7 +32,11 @@ int main() {
 	int Security_State = STATE_DRAW_WELCOME_SCREEN;
 
 	Wifi_SendCommand("dofile(\"system.lua\")\r\n");
-	Wifi_WaitReady();
+	int num_reads = Wifi_WaitReady(print_buf);
+	int j = 0;
+	for (; j < num_reads; j++) {
+		printf(print_buf[j]);
+	}
 	printf("Lua file loaded\n");
 
 	Point p;
@@ -48,17 +54,24 @@ int main() {
 				printf("Generating new security code\n");
 				// Generate a new code
 				Security_GenerateCode();
-				printf("Security Code: %d,%d,%d,%d\n",Security_Code[0],Security_Code[1],Security_Code[2],Security_Code[3]);
+				printf("Security Code: %d,%d,%d,%d\n", Security_Code[0],
+						Security_Code[1], Security_Code[2], Security_Code[3]);
 				// Send the code to our phone
 				char buf[256];
 				snprintf(buf, sizeof buf,
 						"send_sms(\"+14387000752\",\"+17789524378\",\"Your New Code is %d,%d,%d,%d\")\r\n",
-						Security_Code[0],Security_Code[1],Security_Code[2],Security_Code[3]);
+						Security_Code[0], Security_Code[1], Security_Code[2],
+						Security_Code[3]);
 
 				Wifi_SendCommand(buf);
-				Wifi_WaitReady();
+				num_reads = Wifi_WaitReady(print_buf);
+				int j = 0;
+				for (; j < num_reads; j++) {
+					printf(print_buf[j]);
+				}
 				usleep(1000000);
-				printf("User Code: %d,%d,%d,%d\n",User_Input[0],User_Input[1],User_Input[2],User_Input[3]);
+				printf("User Code: %d,%d,%d,%d\n", User_Input[0], User_Input[1],
+						User_Input[2], User_Input[3]);
 				Security_State = STATE_DRAW_NUMPAD;
 			}
 			break;
@@ -71,25 +84,28 @@ int main() {
 			p = TS_GetRelease();
 			int button = Graphics_GetNumPad(p.x, p.y);
 			printf("Coords: %d, %d\n", p.x, p.y);
-			printf("Button index: %d\n" ,button);
+			printf("Button index: %d\n", button);
 
-			if(button == NUMPAD_ENTER && graphics_field_cursor == CODE_LENGTH) {
-				if(Security_CheckCode()) {
+			if (button == NUMPAD_ENTER && graphics_field_cursor == CODE_LENGTH) {
+				if (Security_CheckCode()) {
 					Security_State = STATE_DRAW_UNLOCK_SCREEN;
 				} else {
 					Security_State = STATE_DRAW_LOCK_SCREEN;
 				}
-			} else if(button == NUMPAD_DELETE && graphics_field_cursor >= 0) {
+			} else if (button == NUMPAD_DELETE && graphics_field_cursor >= 0) {
 				int j;
 				// Todo handle in security
-				for(j=0;j<CODE_LENGTH;j++) {
+				for (j = 0; j < CODE_LENGTH; j++) {
 					User_Input[j] = -1;
 				}
-				printf("User Code Delete: %d,%d,%d,%d\n",User_Input[0],User_Input[1],User_Input[2],User_Input[3]);
-			} else if(graphics_field_cursor <= CODE_LENGTH){
+				printf("User Code Delete: %d,%d,%d,%d\n", User_Input[0],
+						User_Input[1], User_Input[2], User_Input[3]);
+			} else if (graphics_field_cursor <= CODE_LENGTH) {
 				// Todo handle in security
-				User_Input[graphics_field_cursor] = Graphics_ButtonNumToNum(button);
-				printf("User Code: %d,%d,%d,%d\n",User_Input[0],User_Input[1],User_Input[2],User_Input[3]);
+				User_Input[graphics_field_cursor] = Graphics_ButtonNumToNum(
+						button);
+				printf("User Code: %d,%d,%d,%d\n", User_Input[0], User_Input[1],
+						User_Input[2], User_Input[3]);
 			}
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
