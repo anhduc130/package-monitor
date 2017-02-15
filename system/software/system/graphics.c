@@ -3,6 +3,8 @@
 #include "fonts.h"
 #include "security.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 /**********************************************************************
  * This function writes a single pixel to the x,y coords specified in the specified colour
@@ -105,20 +107,25 @@ void Graphics_DrawStraightLine(int x1, int y1, int x2, int y2, int Colour) {
  *	Function to draw a circle given an x coordinate, y coordinate and the radius.
  *
  ******************************************************************************************/
-void Graphics_DrawCircle(int x0, int y0, int radius) {
+void Graphics_DrawCircle(int x0, int y0, int radius, int colour) {
 	int x = radius;
 	int y = 0;
 	int err = 0;
 
 	while (x >= y) {
-		Graphics_WriteAPixel(x0 + x, y0 + y, BLACK);
-		Graphics_WriteAPixel(x0 + y, y0 + x, BLACK);
-		Graphics_WriteAPixel(x0 - y, y0 + x, BLACK);
-		Graphics_WriteAPixel(x0 - x, y0 + y, BLACK);
-		Graphics_WriteAPixel(x0 - x, y0 - y, BLACK);
-		Graphics_WriteAPixel(x0 - y, y0 - x, BLACK);
-		Graphics_WriteAPixel(x0 + y, y0 - x, BLACK);
-		Graphics_WriteAPixel(x0 + x, y0 - y, BLACK);
+//		Graphics_WriteAPixel(x0 + x, y0 + y, colour);
+//		Graphics_WriteAPixel(x0 + y, y0 + x, colour);
+//		Graphics_WriteAPixel(x0 - y, y0 + x, colour);
+//		Graphics_WriteAPixel(x0 - x, y0 + y, colour);
+//		Graphics_WriteAPixel(x0 - x, y0 - y, colour);
+//		Graphics_WriteAPixel(x0 - y, y0 - x, colour);
+//		Graphics_WriteAPixel(x0 + y, y0 - x, colour);
+//		Graphics_WriteAPixel(x0 + x, y0 - y, colour);
+
+		Graphics_DrawHorizontalLine(x0 - x, x0 + x, y0 + y, colour);
+		Graphics_DrawHorizontalLine(x0 - x, x0 + x, y0 - y, colour);
+		Graphics_DrawVerticalLine(y0 - x, y0 + x, x0 + y, colour);
+		Graphics_DrawVerticalLine(y0 - x, y0 + x, x0 - y, colour);
 
 		if (err <= 0) {
 			y += 1;
@@ -136,21 +143,25 @@ void Graphics_DrawCircle(int x0, int y0, int radius) {
  *
  ******************************************************************************************/
 void Graphics_DrawRectangle(Rectangle_t *rect) {
-
 	int x1 = rect->x1;
 	int y1 = rect->y1;
 	int x2 = rect->x2;
 	int y2 = rect->y2;
+	int yPos = rect->y1;
 	int colour = rect->colour;
 
-	while (y1 <= y2) {
-		Graphics_DrawHorizontalLine(x1, x2, y1, colour);
-		y1++;
+	while (yPos <= y2) {
+		Graphics_DrawHorizontalLine(x1, x2, yPos, colour);
+		yPos++;
+	}
+
+	if (rect->type == 1){
+		Graphics_DrawHomeIcon(x1 + 30, y1 + 5);
+		return;
 	}
 
 	if (rect->text != NULL){
-		printf(rect->text);
-		Graphics_DrawText(x1 + 20, y1 - 35, WHITE, GRAY, rect->text, strlen(rect->text),0);
+		Graphics_DrawTextCentered(y1 +(y2-y1-10)/2, x1, x2, WHITE, GRAY, rect->text, strlen(rect->text),0);
 	}
 }
 
@@ -179,16 +190,31 @@ void Graphics_DrawText(int x, int y, int colour, int backgroundColour, char *tex
 }
 
 /*****************************************************************************************
+ *	Function to draw centered text given a y coordinate, left x bound and a right x bound.
+ *
+ ******************************************************************************************/
+void Graphics_DrawTextCentered(int y, int xBoundLeft, int xBoundRight, int colour, int backgroundColour, char *text, int n, int erase){
+	int i;
+	int textLength = 12 * n;
+	int xPos =	xBoundLeft + (xBoundRight - textLength - xBoundLeft) / 2;
+	for (i = 0; i < n; i++){
+		Graphics_Font10x14(xPos, y, colour, backgroundColour, text[i], erase);
+		xPos = xPos + 12;
+	}
+}
+
+/*****************************************************************************************
  *	Initializes and returns a rectangle given the four points, a colour and text for the rectangle
  *
  ******************************************************************************************/
-Rectangle_t* Graphics_Init_Rectangle(int x1, int y1, int x2, int y2, int colour, const char *text) {
+Rectangle_t* Graphics_Init_Rectangle(int x1, int y1, int x2, int y2, int colour, int type, const char *text) {
 	Rectangle_t* rect = malloc(sizeof(Rectangle_t));
 
 	rect->x1 = x1;
 	rect->x2 = x2;
 	rect->y1 = y1;
 	rect->y2 = y2;
+	rect->type = type;
 
 	rect->colour = colour;
 	rect->x_length = x2 - x1;
@@ -212,7 +238,7 @@ void Graphics_Destroy_Rectangle(Rectangle_t* rect) {
  ******************************************************************************************/
 void Graphics_ClearScreen(int Colour) {
 	int i;
-	for (i = 0; i < 480; i++) {
+	for (i = 0; i < 481; i++) {
 		Graphics_DrawHorizontalLine(0, 800, i, Colour);
 	}
 }
@@ -229,15 +255,65 @@ void Graphics_DrawLineDemo() {
 }
 
 /*****************************************************************************************
+ *	Function to display the initialization screen
+ *
+ ******************************************************************************************/
+void Graphics_DrawInitializationScreen(){
+	char initializeLabel[] = "WELCOME TO THE HOME PACKAGE MONITOR!";
+	char promptLabel[] = "SIGN UP TO INITIALIZE THE MASTER PASSCODE";
+	char *signUpLabel = "SIGN UP";
+	Graphics_ClearScreen(BLACK);
+
+	Graphics_DrawTextCentered(200, 0, XRES, WHITE, BLACK, initializeLabel, strlen(initializeLabel), 0);
+	Graphics_DrawTextCentered(250, 0, XRES, WHITE, BLACK, promptLabel, strlen(promptLabel), 0);
+
+	sign_up_rect = Graphics_InitializeRectangleCentered((strlen(signUpLabel) * 12) + 30, 300, 50, 0, 800, GREEN, signUpLabel);
+	Graphics_DrawRectangle(sign_up_rect);
+}
+
+/*****************************************************************************************
  *	Function to draw the welcome screen GUI.
  *
  ******************************************************************************************/
 void Graphics_DrawWelcomeScreen(){
-	char requestLabel[] = "Welcome, please request a code:";
+	char requestLabel[] = "WELCOME, PLEASE LOG IN OR REQUEST A CODE";
+	char requestCode[] = "REQUEST CODE";
+	char logInLabel[] = "LOG IN";
 	Graphics_ClearScreen(BLACK);
-	Graphics_DrawText(200, 100, WHITE, BLACK, requestLabel, strlen(requestLabel), 0);
-	request_code_rect = Graphics_Init_Rectangle(300, 150, 300 + SQUAREWIDTH, 150 + SQUAREHEIGHT, GREEN, "Click");
+
+	Graphics_DrawTextCentered(220, 0, 800, WHITE, BLACK, requestLabel, strlen(requestLabel), 0);
+
+	request_code_rect = Graphics_InitializeRectangleCentered(strlen(requestCode)*12 + 30, 250, 75, 0, 800, GREEN, requestCode);
 	Graphics_DrawRectangle(request_code_rect);
+
+	log_in_rect = Graphics_InitializeRectangleCentered(strlen(logInLabel)*12 + 30, 30, 75, 650, 750, BLUE, logInLabel);
+	Graphics_DrawRectangle(log_in_rect);
+}
+
+void Graphics_DrawPhoneNumberMenu(){
+	Graphics_ClearScreen(BLACK);
+
+	char promptLabel[] = "PLEASE ENTER YOUR PHONE NUMBER:";
+	Graphics_InitializeHomeButton();
+	Graphics_DrawHomeButton();
+	Graphics_DrawText(FIELDSTARTX + 15, FIELDSTARTY - 20, WHITE, BLACK, promptLabel, strlen(promptLabel),0);
+	Graphics_DrawField(PHONENUMLENGTH, PHONEINDEXLEN);
+	Graphics_DrawNumPad();
+}
+
+void Graphics_DrawMasterCodeMenu(){
+	Graphics_ClearScreen(BLACK);
+
+	char promptLabel[] = "PLEASE ENTER THE MASTER CODE:";
+	Graphics_InitializeHomeButton();
+	Graphics_DrawHomeButton();
+	Graphics_DrawText(FIELDSTARTX + 15, FIELDSTARTY - 20, WHITE, BLACK, promptLabel, strlen(promptLabel),0);
+	Graphics_DrawField(MASTERCODELENGTH, MASTERINDEXLEN);
+	Graphics_DrawNumPad();
+}
+
+void Graphics_DrawLoadingScreen(){
+
 }
 
 /*****************************************************************************************
@@ -247,8 +323,8 @@ void Graphics_DrawWelcomeScreen(){
 void Graphics_DrawUnlockScreen(){
 	Graphics_ClearScreen(GREEN);
 	char successLabel[] = "Successfully Unlocked!";
-	Graphics_DrawText(300, 200, WHITE, BLACK, successLabel, strlen(successLabel), 0);
-
+	Graphics_DrawTextCentered(200, 0, 800, WHITE, BLACK, successLabel, strlen(successLabel), 0);
+	Graphics_DrawHomeButton();
 }
 
 /*****************************************************************************************
@@ -258,7 +334,8 @@ void Graphics_DrawUnlockScreen(){
 void Graphics_DrawLockScreen(){
 	Graphics_ClearScreen(RED);
 	char failureLabel[] = "Incorrect Pin";
-	Graphics_DrawText(300, 200, WHITE, BLACK, failureLabel, strlen(failureLabel), 0);
+	Graphics_DrawTextCentered(200, 0, 800, WHITE, BLACK, failureLabel, strlen(failureLabel), 0);
+	Graphics_DrawHomeButton();
 }
 
 /*****************************************************************************************
@@ -266,21 +343,42 @@ void Graphics_DrawLockScreen(){
  *
  ******************************************************************************************/
 void Graphics_DrawMenu() {
-	int i, j, k;
-	int xPosStart, xPosEnd = 0;
-	int yPosStart = 125;
-	int yPosEnd = yPosStart + SQUAREHEIGHT;
-
-	char menuLabel[] = "Please enter the access code:";
-	char *text;
+	char menuLabel[] = "PLEASE ENTER THE ACCESS CODE:";
 	graphics_field_cursor = 0;
 
 	Graphics_ClearScreen(BLACK);
 
-	Graphics_DrawField();
-	Graphics_DrawText(FIELDSTARTX + 15, FIELDSTARTY + 5, BLUE, WHITE, menuLabel, strlen(menuLabel),0);
+	Graphics_InitializeHomeButton();
+	Graphics_DrawHomeButton();
+	Graphics_DrawText(FIELDSTARTX + 15, FIELDSTARTY - 20, WHITE, BLACK, menuLabel, strlen(menuLabel),0);
+	Graphics_DrawField(CODELENGTH, CODEINDEXLEN);
 
-	k = 0;
+	Graphics_DrawNumPad();
+}
+
+/*****************************************************************************************
+ *	Function to draw the white field in our number pad GUI.
+ *
+ ******************************************************************************************/
+void Graphics_DrawField(int codeLength, int indexLength) {
+	int i;
+	int xStart = FIELDSTARTX + FIELDSPACE;
+
+	Graphics_PointsDrawRectangle(FIELDSTARTX, FIELDSTARTY, FIELDENDX, FIELDENDY, WHITE);
+
+	for (i = 0; i < codeLength; i++) {
+		Graphics_DrawHorizontalLine(xStart, xStart + indexLength, FIELDENDY - 10, BLACK);
+		xStart = xStart + indexLength + FIELDSPACE;
+	}
+}
+
+void Graphics_InitializeNumberPad(){
+	int i, j;
+	int k = 0;
+	int xPosStart, xPosEnd = 0;
+	int yPosStart = 125;
+	int yPosEnd = yPosStart + SQUAREHEIGHT;
+	char *text;
 
 	for (j = 0; j < 4; j++) {
 		xPosStart = (800 - ((SQUAREWIDTH * 3) + (SPACESIZE * 2))) / 2;
@@ -289,11 +387,11 @@ void Graphics_DrawMenu() {
 			int colour = GRAY;
 			if(j == 3 && i == 0){
 				colour = GREEN;
-				text = "Submit";
+				text = "SUBMIT";
 			}
 			else if (j == 3 && i == 2){
 				colour = RED;
-				text = "Clear";
+				text = "CLEAR";
 			}
 			else {
 				char num[1];
@@ -301,11 +399,9 @@ void Graphics_DrawMenu() {
 				text = num;
 			}
 
-			Rectangle_t* rect = Graphics_Init_Rectangle(xPosStart, yPosStart, xPosEnd, yPosEnd, colour, text);
-
+			Rectangle_t* rect = Graphics_Init_Rectangle(xPosStart, yPosStart, xPosEnd, yPosEnd, colour, REGULAR_BUTTON, text);
 			numpad[k] = rect;
-
-			Graphics_DrawRectangle(rect);
+			//Graphics_DrawRectangle(rect);
 			xPosStart = xPosEnd + SPACESIZE;
 			xPosEnd = xPosStart + SQUAREWIDTH;
 
@@ -316,40 +412,76 @@ void Graphics_DrawMenu() {
 	}
 }
 
-/*****************************************************************************************
- *	Function to draw the white field in our number pad GUI.
- *
- ******************************************************************************************/
-void Graphics_DrawField() {
+void Graphics_DrawNumPad(){
 	int i;
-	int xStart = FIELDSTARTX + FIELDSPACE;
-
-	Graphics_PointsDrawRectangle(FIELDSTARTX, FIELDSTARTY, FIELDENDX, FIELDENDY, WHITE);
-
-	for (i = 0; i < 4; i++) {
-		Graphics_DrawHorizontalLine(xStart, xStart + INDEXSIZE, FIELDENDY - 10, BLACK);
-		xStart = xStart + INDEXSIZE + FIELDSPACE;
+	for (i = 0; i < NUMPAD_SIZE; i++){
+		Graphics_DrawRectangle(numpad[i]);
 	}
+}
+
+void Graphics_InitializeHomeButton(){
+	char homeButtonLabel[] = "HOME";
+	home_button_rect = Graphics_Init_Rectangle(25, 15, 140, 65, BLUE, HOME_BUTTON, homeButtonLabel);
+}
+
+void Graphics_DrawHomeButton() {
+	Graphics_DrawRectangle(home_button_rect);
+}
+
+void Graphics_DrawHomeIcon(int xStart, int yStart){
+	char homeButtonLabel[] = "HOME";
+	Graphics_DrawStraightLine(xStart, yStart, xStart + 20, yStart + 20,WHITE);
+	Graphics_DrawStraightLine(xStart, yStart, xStart - 20, yStart + 20,WHITE);
+	Graphics_DrawStraightLine(xStart - 20, yStart + 20, xStart + 20, yStart + 20,WHITE);
+	Graphics_DrawStraightLine(xStart - 10, yStart + 20, xStart - 10, yStart + 40,WHITE);
+	Graphics_DrawStraightLine(xStart + 10, yStart + 20, xStart + 10, yStart + 40,WHITE);
+	Graphics_DrawStraightLine(xStart - 10, yStart + 40, xStart + 10, yStart + 40,WHITE);
+	Graphics_DrawText(xStart + 30, yStart + 20, WHITE, BLACK, "HOME",strlen(homeButtonLabel),0);
 }
 
 /*****************************************************************************************
  *	Function to draw a rectangle in our number pad GUI.
  *
  ******************************************************************************************/
-void Graphics_DrawSquare(int index, int colour) {
+void Graphics_DrawSquare(int index, int colour, int codeIndexLength) {
 	int lineStart = FIELDSTARTX + FIELDSPACE;
 	while (index > 0){
-		lineStart = lineStart + INDEXSIZE + FIELDSPACE;
+		lineStart = lineStart + codeIndexLength + FIELDSPACE;
 		index--;
 	}
 
-	Graphics_PointsDrawRectangle(lineStart + 45, FIELDSTARTY + 30, lineStart + INDEXSIZE - 45, FIELDSTARTY + 60, colour);
+	Graphics_DrawCircle(lineStart + (codeIndexLength / 2), FIELDSTARTY + 30, 15, colour);
+	//Graphics_PointsDrawRectangle(lineStart + 45, FIELDSTARTY + 15, lineStart + INDEXSIZE - 45, FIELDSTARTY + 45, colour);
 }
 
-int Graphics_GetNumPad(int point_x, int point_y) {
+//void Graphics_DrawUserEnteredCode(){
+//	int i;
+//	for (i = 0; i < CODELENGTH; i++){
+//		Graphics_DrawUserEnteredDigit(i, User_Input[i], BLACK);
+//	}
+//}
+
+void Graphics_DrawUserEnteredDigit(int index, int digitVal, int colour, int codeIndexLength){
+	int lineStart = FIELDSTARTX + FIELDSPACE;
+	while (index > 0){
+		lineStart = lineStart + codeIndexLength + FIELDSPACE;
+		index--;
+	}
+
+	char *digit;
+	sprintf(digit, "%d", digitVal);
+
+	Graphics_DrawTextCentered(FIELDSTARTY + 30, lineStart, lineStart + codeIndexLength, BLACK, WHITE, digit, 1,0 );
+}
+
+/*
+ * Get the index of the number pressed on the number pad, indices range from 0 to 11.
+ */
+int Graphics_GetNumberPressed(int point_x, int point_y, int codeLength, int array[], int codeIndexLength) {
 	int i;
-	for(i=0;i<NUMPAD_SIZE;i++){
-		if(Graphics_InRectangle(point_x,point_y,numpad[i])) {
+	for(i = 0; i < NUMPAD_SIZE; i++){
+		if(Graphics_InRectangle(point_x, point_y, numpad[i])) {
+
 			// Change the colour temporarily to show press
 			numpad[i]->colour = BLACK;
 			Graphics_DrawRectangle(numpad[i]);
@@ -357,21 +489,23 @@ int Graphics_GetNumPad(int point_x, int point_y) {
 
 			if(i == NUMPAD_DELETE) {
 				numpad[i]->colour = RED;
+				graphics_field_cursor = 0;
 				// Decrement since we've deleted a character
-				if(graphics_field_cursor > 0) {
-					int j;
-					for(j=0;j<CODE_LENGTH;j++) {
-						graphics_field_cursor = 0;
-						Graphics_DrawSquare(j,WHITE);
-					}
+				int j;
+				for(j = 0; j < codeLength; j++) {
+					Graphics_DrawSquare(j,WHITE, codeIndexLength);
+					array[j] = -1;
 				}
 			} else if(i == NUMPAD_ENTER) {
 				numpad[i]->colour = GREEN;
 			} else {
 				numpad[i]->colour = GRAY;
+
 				// Increment since we've drawn a character
-				if(graphics_field_cursor < CODE_LENGTH) {
-					Graphics_DrawSquare(graphics_field_cursor,BLACK);
+				if(graphics_field_cursor < codeLength) {
+					//Graphics_DrawSquare(graphics_field_cursor,BLACK);
+					array[graphics_field_cursor] = Graphics_ButtonNumToNum(i);
+					Graphics_DrawUserEnteredDigit(graphics_field_cursor, Graphics_ButtonNumToNum(i), BLACK, codeIndexLength);
 					graphics_field_cursor++;
 				}
 			}
@@ -398,35 +532,21 @@ int Graphics_ButtonNumToNum(int button) {
  * Returns 1 if point inside rect
  */
 int Graphics_InRectangle(int point_x, int point_y, Rectangle_t* rect) {
-
-//	if(point_x < rect->x2 && point_x > rect->x1 && point_y < rect->y2 && point_y > rect->y1)
-//
-//	float area = Graphics_AreaRect(rect);
-//
-//	// Left side to point area
-//	float a1 = Graphics_AreaTriangle(point_x,point_y,rect->x1,rect->y1,rect->x1,rect->y2);
-//	// Top side to point area
-//	float a2 = Graphics_AreaTriangle(point_x,point_y,rect->x1,rect->y1,rect->x2,rect->y1);
-//	// Right side to point area
-//	float a3 = Graphics_AreaTriangle(point_x,point_y,rect->x2,rect->y2,rect->x2,rect->y1);
-//	// Bottom side to point area
-//	float a4 = Graphics_AreaTriangle(point_x,point_y,rect->x1,rect->y2,rect->x2,rect->y2);
-//
-//	//return (a1 + a2 + a3 + a4) <= area;
 	return point_x < rect->x2 && point_x > rect->x1 && point_y < rect->y2 && point_y > rect->y1;
 }
 
 /**
  * Returns 1 if point inside request code rect
  */
-int Graphics_RequestCodeTouched(int point_x, int point_y) {
-	int isTouched = Graphics_InRectangle(point_x,point_y,request_code_rect);
+int Graphics_RectangleTouched(int point_x, int point_y, Rectangle_t *rect) {
+	int isTouched = Graphics_InRectangle(point_x,point_y,rect);
+	int originalColour = rect->colour;
 	if(isTouched) {
-		request_code_rect->colour = BLACK;
-		Graphics_DrawRectangle(request_code_rect);
+		rect->colour = BLACK;
+		Graphics_DrawRectangle(rect);
 		usleep(50000);
-		request_code_rect->colour = GREEN;
-		Graphics_DrawRectangle(request_code_rect);
+		rect->colour = originalColour;
+		Graphics_DrawRectangle(rect);
 	}
 	return isTouched;
 }
@@ -441,11 +561,8 @@ float Graphics_AreaRect(Rectangle_t* rect) {
 	int y2 = rect->y2;
 
 	float area = (y2 - y1)*(x2-x1) + (y1-y2)*(x1-x2);
-
 	area = area < 0.0 ? area * -1.0 : area;
-
 	area = 1.0/2.0 * area;
-
 	return area;
 }
 
@@ -454,8 +571,12 @@ float Graphics_AreaRect(Rectangle_t* rect) {
  */
 float Graphics_AreaTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
 	int area = 1.0/2.0 * (x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2));
-
 	area = area < 0 ? area * -1 : area;
-
 	return area;
+}
+
+Rectangle_t* Graphics_InitializeRectangleCentered(int xLength, int yPos, int yLength, int xBoundLeft, int xBoundRight, int colour, char *text){
+	int xPos =	xBoundLeft + (xBoundRight - xLength - xBoundLeft) / 2;
+	Rectangle_t *rect = Graphics_Init_Rectangle(xPos, yPos, xPos + xLength, yPos + yLength, colour, REGULAR_BUTTON, text);
+	return rect;
 }
