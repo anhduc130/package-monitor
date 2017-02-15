@@ -74,7 +74,6 @@ function build_put_request(pk, masterpw, pw, isconfirmed, phonenum)
      "Accept: application/json, */*" .. 
      "\r\n\r\n"..
      data .. "\r\n"
-     print(request)
     return request
 end
 
@@ -104,9 +103,8 @@ function build_get_request(host, uri, pk)
      "Host: "..host.."\r\n"..
      "Connection: close\r\n"..
      "Content-Type: application/x-www-form-urlencoded\r\n"..
-     "Content-Length: "..string.len(data).."\r\n"..
-     "\r\n"..
-     data
+--     "Content-Length: "..".."\r\n"..
+     "\r\n"
      --print(request)
      return request
 end

@@ -22,7 +22,7 @@ int main() {
 	printf("Starting Program\n");
 
 	// Initialize Hardware
-//	Wifi_Init();
+	Wifi_Init();
 	TS_Init();
 	Graphics_InitializeNumberPad();
 
@@ -31,12 +31,16 @@ int main() {
 	int isInitialized = 0;
 	int button;
 
-//	Wifi_SendCommand("dofile(\"system.lua\")\r\n");
-//	Wifi_WaitReady();
-	printf("Lua file loaded\n");
+	/**
+	 * Send the wifi command
+	 */
+	Wifi_SendCommand("dofile(\"system.lua\")\r\n");
+	int bytesread = Wifi_ReadResponse();
+
+	// Ensure we are connected to wifi
+	Wifi_EnsureConnection();
 
 	Point p;
-
 	while (1) {
 		switch (Security_State) {
 //		case STATE_DRAW_WELCOME_SCREEN:
@@ -111,6 +115,9 @@ int main() {
 				Security_State = STATE_SIGN_UP;
 			}
 			break;
+		/**
+		 * This state draws the sign up screen
+		 */
 		case STATE_SIGN_UP:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
@@ -120,6 +127,9 @@ int main() {
 				Security_State = STATE_OWNER_PHONENUM;
 			}
 			break;
+		/**
+		 * This state handles the owner registering their phone number
+		 */
 		case STATE_OWNER_PHONENUM:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
@@ -144,6 +154,9 @@ int main() {
 					User_Phone_Number_Input[8], User_Phone_Number_Input[9]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
+		/**
+		 * This state handles drawing the registration number
+		 */
 		case STATE_OWNER_MASTERCODE:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
@@ -163,8 +176,12 @@ int main() {
 					User_Master_Code[4], User_Master_Code[5]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
+		/**
+		 * This state sends the put request for the new user
+		 */
 		case STATE_SEND_MASTERCODE:
-			printf("Master code sent");
+			// Send put request to register the owner
+			Security_RegisterOwner();
 			isInitialized = 1;
 			Security_State = STATE_DRAW_INIT_SCREEN;
 			break;
@@ -250,7 +267,6 @@ int main() {
 			break;
 		}
 	}
-
 	Leds_Celebrate();
 
 	return 0;

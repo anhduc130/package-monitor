@@ -4,9 +4,11 @@
  *  Created on: Jan 21, 2017
  *      Author: David
  */
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include "serial.h"
+#include <string.h>
+
 #define isascii(c)  ((c & ~0x7F) == 0)
 
 /*****************************************************************************
@@ -182,6 +184,15 @@ int RS232TestForReceivedData(void) {
 **  START OF WIFI
 *****************************************************************************/
 
+#define BUF_SIZE 512
+#define JSON_SIZE 256
+// Buffer to read the output
+unsigned char rbuf[BUF_SIZE];
+// Buffer containing copy
+unsigned char cbuf[BUF_SIZE];
+// Buffer containing json data
+unsigned char jsonbuf[256];
+
 /*****************************************************************************
 ** Initialise wifi controller
 *****************************************************************************/
@@ -192,14 +203,122 @@ void Wifi_Init(void) {
 	// set up 6850 Control Register to utilise a divide by 16 clock,
 	// set RTS low, use 8 bits of data, no parity, 1 stop bit,
 	// transmitter interrupt disabled
-	Wifi_Control = 0x15;
+	Wifi_Control = 0x55;
 
 	// set 115200 Baud
-	Wifi_Baud = 0x01;
+	Wifi_Baud = 0x1;
 
-	usleep(500000);
+	usleep(100000);
+
+	int i;
+	for(i=0;i<10;i++) {
+		Wifi_SendCommand(" \r\n");
+	}
+
+
+
+	printf("Wifi inititalised\n");
 }
 
+
+/*****************************************************************************
+* Read wifi response into buf for n bytes
+*****************************************************************************/
+int Wifi_ReadResponse() {
+	int i;
+	char data;
+	for(i=0;i<BUF_SIZE;i++) {
+		data = Wifi_ReadRx();
+		if(isascii(data)) {
+			rbuf[i] = data;
+			if(data == '>')
+				break;
+		}
+	}
+	rbuf[i]='\0';
+	printf("%s\n",jsonbuf);
+	return i;
+}
+
+/*****************************************************************************
+* Wifi print response
+*****************************************************************************/
+int Wifi_PrintResponse() {
+	printf("%s",rbuf);
+}
+
+/*****************************************************************************
+* Copy over nbytes from rbuf to to cbuf
+* *****************************************************************************/
+void Wifi_CopyBuffer(int nbytes) {
+	// Clear the original dest
+	Wifi_ClearBuffer(cbuf);
+	int i;
+	for(i=0;i<nbytes;i++) {
+		cbuf[i] = rbuf[i];
+	}
+}
+
+/*****************************************************************************
+* Clear buffers BUF_SIZE
+******************************************************************************/
+void Wifi_ClearBuffer(unsigned char* buf) {
+	int i;
+	for(i=0;i<BUF_SIZE;i++) {
+		buf[i] = '\0';
+	}
+}
+
+/*****************************************************************************
+* Keeps sending check wifi until we have connected
+******************************************************************************/
+void Wifi_EnsureConnection() {
+	Wifi_SendCommand("check_wifi()\r\n");
+	Wifi_ReadResponse();
+	printf("%s\n",rbuf);
+	while(strchr(rbuf,'!') == NULL) {
+		// Go to sleep and try again in a bit
+		usleep(500000);
+		Wifi_SendCommand("check_wifi()\r\n");
+		Wifi_ReadResponse();
+		printf("%s\n",rbuf);
+	}
+}
+
+/*****************************************************************************
+* Keep sending get requests until we get a response
+******************************************************************************/
+void Wifi_EnsureGet(int pk) {
+	char buf[16];
+	snprintf(buf, sizeof buf, "send_get(%d)\r\n", pk);
+	Wifi_SendCommand(buf);
+	Wifi_ReadResponse();
+	while(Wifi_ExtractJson(rbuf, jsonbuf) == EJSON && strlen(jsonbuf) != 79) {
+		Wifi_SendCommand(buf);
+		Wifi_ReadResponse();
+	}
+
+	printf("JSON GET BUFFER BELOW:\n");
+	printf("%s\n",jsonbuf);
+}
+
+/*****************************************************************************
+* Keep sending post requests until we get a response
+* Should only be used when registering
+******************************************************************************/
+void Wifi_EnsurePut(int pk, const char *masterpw, const char *pw, const char *isconfirmed, const char *phonenum) {
+	char buf[64];
+	snprintf(buf, sizeof buf, "send_put(%d,\"%s\",\"%s\",\"%s\",\"%s\")\r\n", pk, masterpw, pw, isconfirmed, phonenum);
+	Wifi_SendCommand(buf);
+	Wifi_ReadResponse();
+	while(Wifi_ExtractJson(rbuf, jsonbuf) == EJSON && strlen(jsonbuf) != 79) {
+		Wifi_SendCommand(buf);
+		Wifi_ReadResponse();
+	}
+
+	printf("JSON PUT BUFFER BELOW:\n");
+	printf("%s\n",jsonbuf);
+}
 
 /*****************************************************************************
 * Wait until ready for command
@@ -225,10 +344,11 @@ void Wifi_WaitReady(void) {
 * Send a command should end in \r\n
 *****************************************************************************/
 void Wifi_SendCommand(const char * command) {
+	// Clear the response buffer before each command
+	Wifi_ClearBuffer(rbuf);
 	int cur_1=0;
 	while(command[cur_1] != '\n') {
 		Wifi_WriteTx(command[cur_1]);
-		printf("%c",command[cur_1]);
 		cur_1++;
 	}
 	Wifi_WriteTx(command[cur_1]);
@@ -238,11 +358,10 @@ void Wifi_SendCommand(const char * command) {
 /*****************************************************************************
 * Read Rx
 *****************************************************************************/
-char Wifi_ReadRx(void) {
+int Wifi_ReadRx(void) {
 	// poll Rx bit in 6850 status register. Wait for it to become '1'
 	while((Wifi_Status & 0x01) != 0x01) {}
-	char val = Wifi_RxData;
-	return val;
+	return Wifi_RxData;
 }
 
 
@@ -264,7 +383,7 @@ int Wifi_ExtractJson(char *src, char *dst) {
 	char *rightbracket = strchr(src, '}');
 
 	if(leftbracket == NULL || rightbracket == NULL) {
-  	return EJSON;
+		return EJSON;
 	}
 	int leftindex = (int)(leftbracket - src);
 	int rightindex = (int)(rightbracket - src);

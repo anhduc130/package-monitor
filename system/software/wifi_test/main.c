@@ -20,13 +20,6 @@ int main() {
 	// Initialize Hardware
 	Wifi_Init();
 
-	printf("Wifi inititalised\n");
-
-	int i;
-	for(i=0;i<10;i++) {
-		Wifi_SendCommand(" \r\n");
-	}
-
 	// Send wifi commands
 	Wifi_SendCommand("print(\"Hello\")\r\n");
 	int bytesread = Wifi_ReadResponse();

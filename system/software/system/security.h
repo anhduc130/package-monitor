@@ -37,6 +37,11 @@
 
 void Security_DeleteCode();
 int Security_CheckCode();
+
+/**
+ * Sends a put request to our server with the user information
+ */
+int Security_RegisterOwner();
 int Security_Code[CODE_LENGTH];
 int User_Input[CODE_LENGTH];
 int User_Phone_Number_Input[PHONENUMLENGTH];
