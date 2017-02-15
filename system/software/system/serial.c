@@ -256,5 +256,132 @@ void Wifi_WriteTx(char val) {
 }
 
 /*****************************************************************************
+* Parse out the json from response
+*****************************************************************************/
+int Wifi_ExtractJson(char *src, char *dst) {
+	// Figure out the the left and right indices of the
+	char *leftbracket = strchr(src, '{');
+	char *rightbracket = strchr(src, '}');
+
+	if(leftbracket == NULL || rightbracket == NULL) {
+  	return EJSON;
+	}
+	int leftindex = (int)(leftbracket - src);
+	int rightindex = (int)(rightbracket - src);
+
+	int diff = rightindex - leftindex;
+
+	// copy the substring
+	memcpy(dst, &src[leftindex+1], diff-1);
+	dst[diff] = '\0';
+}
+
+/*****************************************************************************
+* Parse out the phone number from response
+*****************************************************************************/
+int Wifi_ParsePhoneNumber(char *src, char *dst) {
+	char *copy = (char *)malloc(16);
+	strcpy(copy, src);
+
+	char *res[NPARAMS];
+	char *p = strtok(copy, ",");
+	int i = 0;
+
+	while(p != NULL) {
+  	res[i++] = p;
+  	p = strtok(NULL,",");
+	}
+
+	char *colon = strchr(res[PHONENUM_INDEX],':');
+	if(colon == NULL) {
+  	free(copy);
+  	return EPHN;
+	}
+
+	int colonIndex = (int)(colon - res[PHONENUM_INDEX]);
+	memcpy(dst, res[PHONENUM_INDEX] + colonIndex + 2, 10);
+	dst[10]='\0';
+	return 0;
+}
+
+/*****************************************************************************
+* Parse out the password from response
+*****************************************************************************/
+int Wifi_ParsePw(char *src, char *dst) {
+	char *copy = malloc(sizeof(char)*4);
+	strcpy(copy, src);
+
+	char *res[NPARAMS];
+	char *p = strtok(copy, ",");
+	int i = 0;
+
+	while(p != NULL) {
+   	res[i++] = p;
+   	p = strtok(NULL,",");
+	}
+
+	char *colon = strchr(res[PW_INDEX],':');
+	if(colon == NULL)
+   	return EPW;
+
+	int colonIndex = (int)(colon - res[PW_INDEX]);
+	memcpy(dst, res[PW_INDEX] + colonIndex + 2, 4);
+	dst[4]='\0';
+	return 0;
+}
+
+/*****************************************************************************
+* Parse out the master password from response
+*****************************************************************************/
+int Wifi_ParseMasterPw(char *src, char *dst) {
+	char *copy = malloc(sizeof(char)*6);
+	strcpy(copy, src);
+
+	char *res[NPARAMS];
+	char *p = strtok(copy, ",");
+	int i = 0;
+
+	while(p != NULL) {
+   	res[i++] = p;
+  	p = strtok(NULL,",");
+	}
+
+	char *colon = strchr(res[PWMASTER_INDEX],':');
+	if(colon == NULL)
+  	return EPWMAS;
+
+	int colonIndex = (int)(colon - res[PWMASTER_INDEX]);
+	memcpy(dst, res[PWMASTER_INDEX] + colonIndex + 2, 6);
+	dst[6]='\0';
+	return 0;
+}
+
+/*****************************************************************************
+* Parse out confirmed from response
+*****************************************************************************/
+int Wifi_ParseConfirmed(char *src, char *dst) {
+	char *copy = malloc(sizeof(char)*5);
+	strcpy(copy, src);
+
+	char *res[NPARAMS];
+	char *p = strtok(copy, ",");
+	int i = 0;
+
+	while(p != NULL) {
+  	res[i++] = p;
+  	p = strtok(NULL,",");
+	}
+
+	char *colon = strchr(res[CONFIRM_INDEX],':');
+	if(colon == NULL)
+  	return EPCNF;
+
+	int colonIndex = (int)(colon - res[CONFIRM_INDEX]);
+	memcpy(dst, res[CONFIRM_INDEX] + colonIndex + 1, 5);
+	dst[5]='\0';
+	return 0;
+}
+
+/*****************************************************************************
 **  END OF WIFI
 *****************************************************************************/

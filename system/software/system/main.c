@@ -124,7 +124,7 @@ int main() {
 			TS_WaitForRelease();
 			p = TS_GetRelease();
 			button = Graphics_GetNumberPressed(p.x, p.y, PHONENUMLENGTH,
-					Phone_Number_Input, PHONEINDEXLEN);
+					User_Phone_Number_Input, PHONEINDEXLEN);
 			if (button == NUMPAD_ENTER
 					&& graphics_field_cursor == PHONENUMLENGTH) {
 				Graphics_DrawMasterCodeMenu();
@@ -137,18 +137,18 @@ int main() {
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
 			printf("Phone Number: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-					Phone_Number_Input[0], Phone_Number_Input[1],
-					Phone_Number_Input[2], Phone_Number_Input[3],
-					Phone_Number_Input[4], Phone_Number_Input[5],
-					Phone_Number_Input[6], Phone_Number_Input[7],
-					Phone_Number_Input[8], Phone_Number_Input[9]);
+					User_Phone_Number_Input[0], User_Phone_Number_Input[1],
+					User_Phone_Number_Input[2], User_Phone_Number_Input[3],
+					User_Phone_Number_Input[4], User_Phone_Number_Input[5],
+					User_Phone_Number_Input[6], User_Phone_Number_Input[7],
+					User_Phone_Number_Input[8], User_Phone_Number_Input[9]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
 		case STATE_OWNER_MASTERCODE:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
 			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,
-					Master_Code, MASTERINDEXLEN);
+					User_Master_Code, MASTERINDEXLEN);
 			if (button == NUMPAD_ENTER
 					&& graphics_field_cursor == MASTERCODELENGTH) {
 				Security_State = STATE_SEND_MASTERCODE;
@@ -158,9 +158,9 @@ int main() {
 			}
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
-			printf("Master Code: %d,%d,%d,%d,%d,%d\n", Master_Code[0],
-					Master_Code[1], Master_Code[2], Master_Code[3],
-					Master_Code[4], Master_Code[5]);
+			printf("Master Code: %d,%d,%d,%d,%d,%d\n", User_Master_Code[0],
+					User_Master_Code[1], User_Master_Code[2], User_Master_Code[3],
+					User_Master_Code[4], User_Master_Code[5]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
 		case STATE_SEND_MASTERCODE:
@@ -191,7 +191,7 @@ int main() {
 			TS_WaitForRelease();
 			p = TS_GetRelease();
 			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,
-					Master_Code, MASTERINDEXLEN);
+					User_Master_Code, MASTERINDEXLEN);
 			if (button == NUMPAD_ENTER
 					&& graphics_field_cursor == MASTERCODELENGTH) {
 				//Check Against Master Code here.
@@ -201,9 +201,9 @@ int main() {
 			}
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
-			printf("Master Code: %d,%d,%d,%d,%d,%d\n", Master_Code[0],
-					Master_Code[1], Master_Code[2], Master_Code[3],
-					Master_Code[4], Master_Code[5]);
+			printf("Master Code: %d,%d,%d,%d,%d,%d\n", User_Master_Code[0],
+					User_Master_Code[1], User_Master_Code[2], User_Master_Code[3],
+					User_Master_Code[4], User_Master_Code[5]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
 		case STATE_ENTER_CODE:

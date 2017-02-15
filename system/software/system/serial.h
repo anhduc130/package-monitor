@@ -120,6 +120,18 @@ void TS_WriteTx(char val);
 #define Wifi_RxData (*(volatile unsigned char *)(0x84000242))
 #define Wifi_Baud (*(volatile unsigned char *)(0x84000244))
 
+#define PW_INDEX        1
+#define PWMASTER_INDEX  2
+#define PHONENUM_INDEX  3
+#define CONFIRM_INDEX   4
+#define NPARAMS         5
+
+#define EJSON   1 // json object not found
+#define EPHN    2 // phone number not found
+#define EPW     3 // password not found
+#define EPWMAS  4 // master password not found
+#define EPCNF   5 // confirmed not found
+
 /*****************************************************************************
 ** Initialise wifi controller
 *****************************************************************************/
@@ -144,6 +156,31 @@ char Wifi_ReadRx(void);
 * Write Tx
 *****************************************************************************/
 void Wifi_WriteTx(char val);
+
+/*****************************************************************************
+* Parse out the json from response
+*****************************************************************************/
+int Wifi_ExtractJson(char *src, char *dst);
+
+/*****************************************************************************
+* Parse out the phone number from response
+*****************************************************************************/
+int Wifi_ParsePhoneNumber(char *src, char *dst);
+
+/*****************************************************************************
+* Parse out the password from response
+*****************************************************************************/
+int Wifi_ParsePw(char *src, char *dst);
+
+/*****************************************************************************
+* Parse out the master password from response
+*****************************************************************************/
+int Wifi_ParseMasterPw(char *src, char *dst);
+
+/*****************************************************************************
+* Parse out confirmed from response
+*****************************************************************************/
+int Wifi_ParseConfirmed(char *src, char *dst);
 
 /*****************************************************************************
 **  END OF WIFI

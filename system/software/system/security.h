@@ -39,7 +39,7 @@ void Security_DeleteCode();
 int Security_CheckCode();
 int Security_Code[CODE_LENGTH];
 int User_Input[CODE_LENGTH];
-int Phone_Number_Input[PHONENUMLENGTH];
-int Master_Code[MASTERCODELENGTH];
+int User_Phone_Number_Input[PHONENUMLENGTH];
+int User_Master_Code[MASTERCODELENGTH];
 
 #endif /* SECURITY_H_ */
