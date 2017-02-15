@@ -36,12 +36,47 @@ TWILIO_TOKEN =       "4b2191351b90e784b959b5f6d6facfec"
 
 -- this is the web address of the relay web site that our dongle sends the initial HTTP request to
 HOST = "iot-https-relay.appspot.com" 
-
+APIHOST = "138.197.213.158"
 -- The following variable defines the TWILIO web site that we will connect to
 -- use the first one if you want to send a text to a cell phone
 -- use the second (commented out) one if you want to make a call to a cell phone - that's the only change
 URI = "/twilio/Messages.json"
+APIURI = "/api/"
 --URI = "/twilio/Calls.json"
+
+function build_put_request(pk, masterpw, pw, isconfirmed, phonenum)
+    --PUT /api/1/ HTTP/1.1
+--Host: 138.197.213.158
+--Accept-Encoding: gzip, deflate
+--Connection: keep-alive
+--Content-Type: application/json
+--User-Agent: HTTPie/0.9.9
+--Content-Length: 85
+--Accept: application/json, */*
+--{"masterpw": "654321", "pw": "1234", "isconfirmed": "true", "phonenum": "7789524378"}
+    
+    data = "{"..
+        "\"masterpw\": " .. "\"" .. masterpw .. "\"" ..
+        ",\"pw\": " .. "\"" .. pw .. "\"" ..
+        ",\"isconfirmed\": " .. "\"" .. isconfirmed .. "\"" ..
+        ",\"phonenum\": " .. "\"" .. phonenum ..  "\"" ..
+        "}"
+        
+    uri = APIURI .. pk .. "/" 
+    
+    request = "PUT "..uri.." HTTP/1.1\r\n"..
+     "Host: "..APIHOST.."\r\n"..
+     "Accept-Encoding: gzip, deflate\r\n" ..
+     "Connection: close\r\n"..
+     "Content-Type: application/json\r\n"..
+     "Content-Length: "..string.len(data).."\r\n"..
+     "User-Agent: Mozilla/4.0 (compatible; esp8266 Lua; Windows NT 5.1)\r\n" ..
+     "Accept: application/json, */*" .. 
+     "\r\n\r\n"..
+     data .. "\r\n"
+     print(request)
+    return request
+end
 
 function build_post_request(host, uri, data_table)
 
@@ -58,26 +93,21 @@ function build_post_request(host, uri, data_table)
      "Content-Length: "..string.len(data).."\r\n"..
      "\r\n"..
      data
-     print(request)
+
      return request
 end
 
-function build_get_request(host, uri, data_table)
-     
-     data = ""
+function build_get_request(host, uri, pk)
 
-     for param,value in pairs(data_table) do
-          data = data .. param.."="..value.."&"
-     end
-
-     request = "GET "..uri.." HTTP/1.1\r\n"..
+    uri = uri .. pk .. "/"
+    request = "GET "..uri.." HTTP/1.1\r\n"..
      "Host: "..host.."\r\n"..
      "Connection: close\r\n"..
      "Content-Type: application/x-www-form-urlencoded\r\n"..
      "Content-Length: "..string.len(data).."\r\n"..
      "\r\n"..
      data
-     print(request)
+     --print(request)
      return request
 end
 
@@ -87,50 +117,48 @@ function display(sck,response)
      print(response)
 end
 
-function getCode(host, port, url, deviceId,callback)
+-- When using send_sms: the "from" number HAS to be your twilio number.
+-- If you have a free twilio account the "to" number HAS to be your twilio verified number.
+function send_sms(from,to,body)
+  Pdata = {
+      sid = TWILIO_ACCOUNT_SID,
+      token = TWILIO_TOKEN,
+      Body = string.gsub(body," ","+"),
+      From = from,
+      To = to
+     }
 
-    -- create a connection to the web site here
-    conn=net.createConnection(net.TCP, false) 
-    payloadFound = false
+     socket = net.createConnection(net.TCP,0)
+     socket:on("receive",display)
+     socket:connect(80,HOST)
 
-    -- this call back function is called when a packet of data arrives from the web site            
-    conn:on("receive", function(conn, payload)
-    -- optional next line shows the packets of data arriving from the web site
-        print(string.len(payload))
-        
-        if (payloadFound == true) then
-            print(payload)
-        else
-        -- look for the \r\n\r\n that separates an http response header from the body
-            if (string.find(payload,"\r\n\r\n") ~= nil) then
-                print(string.sub(payload,string.find(payload,"\r\n\r\n") + 4))
-                payloadFound = true
-            end
-        end
+     socket:on("connection",function(sck)
+          post_request = build_post_request(HOST,URI,Pdata)
+          sck:send(post_request)
+     end)
+end
 
-        payload = nil
-        collectgarbage()
-    end)
-
-    -- this call back function is called when we disconnect from the web site
-    conn:on("disconnection", function(conn) 
-        conn = nil
-        print("Disconnected\n")
-        callback("ok")
+function send_put(pk, masterpw, pw, isconfirmed, phonenum)
+    socket = net.createConnection(net.TCP,0)
+    socket:on("receive",display)
+    socket:connect(80,APIHOST)
+    
+    socket:on("connection",function(sck)
+        put_request = build_put_request(pk,masterpw,pw,isconfirmed,phonenum)
+        sck:send(put_request)      
     end)
     
-    -- this call back function is called when a connection to the web site is made
-    conn:on("connection", function(conn)
-        conn:send("GET /"..url.." HTTP/1.0\r\n"..
-              "Host: "..host.."\r\n"..
-              "Connection: close\r\n"..
-              "Accept-Charset: utf-8\r\n"..
-              "Accept-Encoding: \r\n"..
-              "User-Agent: Mozilla/4.0 (compatible; esp8266 Lua; Windows NT 5.1)\r\n".. 
-              "Accept: */*\r\n\r\n")
+end
+
+function send_get(pk)
+    socket = net.createConnection(net.TCP,0)
+    socket:on("receive",display)
+    socket:connect(80,APIHOST)
+    
+    socket:on("connection",function(sck)
+        get_request = build_get_request(APIHOST,APIURI,pk)
+        sck:send(get_request)
     end)
-    -- connect to the web site here
-    conn:connect(port,host)
 end
 
 function check_wifi()
