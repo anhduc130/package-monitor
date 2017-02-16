@@ -31,7 +31,8 @@ module nios_system (
 	sdram_ras_n,
 	sdram_we_n,
 	sdram_clk_clk,
-	switches_export);	
+	switches_export,
+	control_in_export);	
 
 	input		clk_clk;
 	output	[7:0]	hex0_1_export;
@@ -65,4 +66,5 @@ module nios_system (
 	output		sdram_we_n;
 	output		sdram_clk_clk;
 	input	[9:0]	switches_export;
+	output		control_in_export;
 endmodule

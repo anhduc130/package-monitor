@@ -53,7 +53,8 @@ ENTITY NIOS_II_SYSTEM IS
 		-- Hex Display
 		Hex0_1			: out   std_logic_vector(7 downto 0) ;
 		Hex2_3			: out   std_logic_vector(7 downto 0) ;
-		Hex4_5			: out   std_logic_vector(7 downto 0) 
+		Hex4_5			: out   std_logic_vector(7 downto 0) ;
+		CONTROL_IN     : OUT   STD_LOGIC 
 	);
 END NIOS_II_SYSTEM;
 
@@ -65,6 +66,7 @@ ARCHITECTURE NIOS_II_SYSTEM_rtl OF NIOS_II_SYSTEM IS
 		reset_reset_n 				: IN STD_LOGIC;
 		switches_export 			: IN STD_LOGIC_VECTOR (9 DOWNTO 0);
 		leds_export 				: OUT STD_LOGIC_VECTOR (9 DOWNTO 0);
+		control_in_export       : OUT STD_LOGIC; 
 		
 		sdram_addr        		: out   std_logic_vector(12 downto 0);                    -- addr
 		sdram_ba          		: out   std_logic_vector(1 downto 0);                     -- ba
@@ -122,6 +124,7 @@ BEGIN
 		reset_reset_n 			=> KEY(0),
 		switches_export 		=> SW(9 DOWNTO 0),
 		leds_export 			=> LEDR(9 DOWNTO 0),
+		control_in_export    => CONTROL_IN, 
 		
 		sdram_addr 				=> DRAM_ADDR,
 		sdram_ba 				=> BA,
