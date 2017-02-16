@@ -151,14 +151,50 @@ int Security_SendSMS() {
 	Wifi_ReadResponse();
 }
 
+void Security_SendConfirmedSMS() {
+	char buf[128];
+	volatile char userPhoneNum[11];
+	volatile char tempPw[5];
+	int i;
+
+	printf("Phone Number: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+			User_Phone_Number[0], User_Phone_Number[1],
+			User_Phone_Number[2], User_Phone_Number[3],
+			User_Phone_Number[4], User_Phone_Number[5],
+			User_Phone_Number[6], User_Phone_Number[7],
+			User_Phone_Number[8], User_Phone_Number[9]);
+
+	for(i=0;i<10;i++) {
+		userPhoneNum[i] = User_Phone_Number[i] + '0';
+	}
+
+	for(i=0;i<4;i++) {
+		tempPw[i] = Security_Code[i] + '0';
+	}
+	userPhoneNum[10] = '\0';
+	tempPw[4] = '\0';
+	printf("%s\n",userPhoneNum);
+	snprintf(buf, sizeof buf, "send_sms(\"+14387000752\",\"+1%s\",\"You have been approved the code is %s!\")\r\n", userPhoneNum, tempPw);
+	printf("%s",buf);
+	Wifi_SendCommand(buf);
+	Wifi_ReadResponse();
+}
+
 /*******************************************************************************************
  ** Make sure the user has been confirmed to enter the code, they should recieve a text
  ** message of the code to unlock the box
  *******************************************************************************************/
-void Security_CheckIsConfirmed() {
-	// Periodically make get requests and check the isconfirmed field to be true
-	// Obtain and store the temporary password
-	// Send text message to opener about the password
+int Security_WaitApproved() {
+	// Wait until we get approved
+	// Send out the code for this box
+	Wifi_EnsureGet(1);
+	// Json buf should now be valid
+	char isConfirmed[MASTERCODELENGTH];
+	Wifi_ParseConfirmed(jsonbuf, isConfirmed);
+
+	printf("%s\n",isConfirmed);
+	// Check if value is true
+	return isConfirmed[0] == 't';
 }
 
 /*******************************************************************************************

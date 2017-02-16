@@ -32,6 +32,7 @@
 #define STATE_UNLOCK_SCREEN			13
 #define STATE_IDLE					14
 #define STATE_USER_PHONENUM			15
+#define STATE_WAIT_APPROVED			16
 
 #define CODE_LENGTH 4
 
@@ -43,6 +44,8 @@ int Security_CheckCode();
  */
 void Security_RegisterOwner();
 int Security_ObtainValues();
+int Security_WaitApproved();
+void Security_SendConfirmedSMS();
 
 volatile int Security_Code[CODELENGTH]; // temporary password
 volatile int Security_Code_Input[CODELENGTH]; // temporary password current input

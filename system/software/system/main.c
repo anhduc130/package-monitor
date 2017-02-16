@@ -18,21 +18,21 @@
 #include "graphics.h"
 #include "security.h"
 
-#define STATE_DRAW_INIT_SCREEN		1
-#define STATE_SIGN_UP				2
-#define STATE_OWNER_PHONENUM		3
-#define STATE_OWNER_MASTERCODE		4
-#define STATE_SEND_MASTERCODE		5
-#define STATE_SIGN_IN				6
-#define STATE_ENTER_MASTER_CODE		7
-#define STATE_REQUESTED_CODE		8
-#define STATE_ENTER_CODE			9
-#define STATE_DRAW_LOCK_SCREEN		10
-#define STATE_LOCK_SCREEN			11
-#define STATE_DRAW_UNLOCK_SCREEN	12
-#define STATE_UNLOCK_SCREEN			13
-#define STATE_IDLE					14
-#define STATE_USER_PHONENUM			15
+//#define STATE_DRAW_INIT_SCREEN		1
+//#define STATE_SIGN_UP				2
+//#define STATE_OWNER_PHONENUM		3
+//#define STATE_OWNER_MASTERCODE		4
+//#define STATE_SEND_MASTERCODE		5
+//#define STATE_SIGN_IN				6
+//#define STATE_ENTER_MASTER_CODE		7
+//#define STATE_REQUESTED_CODE		8
+//#define STATE_ENTER_CODE			9
+//#define STATE_DRAW_LOCK_SCREEN		10
+//#define STATE_LOCK_SCREEN			11
+//#define STATE_DRAW_UNLOCK_SCREEN	12
+//#define STATE_UNLOCK_SCREEN			13
+//#define STATE_IDLE					14
+//#define STATE_USER_PHONENUM			15
 
 int main() {
 	printf("Starting Program\n");
@@ -42,9 +42,11 @@ int main() {
 	TS_Init();
 	Graphics_Initialize();
 
-	volatile int State = STATE_DRAW_INIT_SCREEN;
-	volatile int isInitialized = 0;
-	volatile int button;
+	int State = STATE_DRAW_INIT_SCREEN;
+	int isInitialized = 0;
+	int button;
+	int isConfirmed = 0;
+	int approved;
 
 	/**
 	 * Send the wifi command
@@ -72,7 +74,7 @@ int main() {
 
 	Point p;
 	while (1) {
-		switch ((int) State) {
+		switch (State) {
 		case STATE_DRAW_INIT_SCREEN:
 			if (isInitialized) {
 				Graphics_DrawWelcomeScreen();
@@ -92,11 +94,36 @@ int main() {
 				Graphics_DrawPhoneNumberMenu();
 				graphics_field_cursor = 0;
 				State = STATE_OWNER_PHONENUM;
+			} else {
+				State = STATE_SIGN_UP;
 			}
 			break;
-			/**
-			 * This state handles the owner registering their phone number
-			 */
+			// In this state we wait to get approved once we do we get sent the text message with the temporary code
+		case STATE_WAIT_APPROVED:
+			approved = Security_WaitApproved();
+			// We loop inside this state
+			if (approved) {
+				graphics_field_cursor = 0;
+				Graphics_DrawMenu();
+				// Get the values for this device
+				//while (Security_ObtainValues() != 0);
+				// Send sms to the user with the temporary code
+				Security_SendConfirmedSMS();
+				// Approved so we go to the num pad
+				State = STATE_ENTER_CODE;
+			} else {
+				if (isConfirmed > 30) {
+					State = STATE_DRAW_INIT_SCREEN;
+					break;
+				} else {
+					State = STATE_WAIT_APPROVED;
+				}
+				printf("Waiting for approval\n");
+				State = STATE_WAIT_APPROVED;
+				//waitCounter++;
+			}
+			break;
+			// This state handles the owner registering their phone number
 		case STATE_OWNER_PHONENUM:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
@@ -108,8 +135,11 @@ int main() {
 				graphics_field_cursor = 0;
 				State = STATE_OWNER_MASTERCODE;
 			}
-			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
+			else if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+			}
+			else {
+				State = STATE_OWNER_PHONENUM;
 			}
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
@@ -134,13 +164,18 @@ int main() {
 				graphics_field_cursor = 0;
 				Graphics_DrawMenu();
 				// Get the values for this device
-				while (Security_ObtainValues() != 0);
+				while (Security_ObtainValues() != 0)
+					;
 				// Send sms
 				Security_SendSMS();
-				State = STATE_ENTER_CODE;
+				// Go to wait to be approved
+				State = STATE_WAIT_APPROVED;
 			}
-			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
+			else if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+			}
+			else {
+				State = STATE_USER_PHONENUM;
 			}
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
@@ -162,8 +197,11 @@ int main() {
 					&& graphics_field_cursor == MASTERCODELENGTH) {
 				State = STATE_SEND_MASTERCODE;
 			}
-			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
+			else if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+			}
+			else {
+				State = STATE_OWNER_MASTERCODE;
 			}
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
@@ -181,7 +219,7 @@ int main() {
 			State = STATE_DRAW_INIT_SCREEN;
 			break;
 			// This state draws the sign in screen and obtains the value for logging in
-		case STATE_SIGN_IN: {
+		case STATE_SIGN_IN:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
 			if (Graphics_RectangleTouched(p.x, p.y, log_in_rect)) {
@@ -194,12 +232,14 @@ int main() {
 				State = STATE_ENTER_MASTER_CODE;
 			}
 
-			if (Graphics_RectangleTouched(p.x, p.y, request_code_rect)) {
+			else if (Graphics_RectangleTouched(p.x, p.y, request_code_rect)) {
 				//Request Code Button was pressed
 				State = STATE_REQUESTED_CODE;
 			}
+			else {
+				State = STATE_SEND_MASTERCODE;
+			}
 			break;
-		}
 			/**
 			 * User has requested to recieve the code
 			 */
@@ -216,8 +256,6 @@ int main() {
 			p = TS_GetRelease();
 			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,
 					Master_Code_Input, MASTERINDEXLEN);
-			State = STATE_ENTER_MASTER_CODE;
-
 			if (button == NUMPAD_ENTER
 					&& graphics_field_cursor == MASTERCODELENGTH) {
 				//Check Against Master Code here.
@@ -227,8 +265,11 @@ int main() {
 					State = STATE_DRAW_INIT_SCREEN;
 				}
 			}
-			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
+			else if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+			}
+			else {
+				State = STATE_ENTER_MASTER_CODE;
 			}
 
 			printf("Coords: %d, %d\n", p.x, p.y);
@@ -247,7 +288,6 @@ int main() {
 			p = TS_GetRelease();
 			int button = Graphics_GetNumberPressed(p.x, p.y, CODELENGTH,
 					Security_Code_Input, CODEINDEXLEN);
-			State = STATE_ENTER_CODE;
 
 			if (button == NUMPAD_ENTER && graphics_field_cursor == CODELENGTH) {
 				if (Security_CheckCode()) {
@@ -255,6 +295,9 @@ int main() {
 				} else {
 					State = STATE_DRAW_LOCK_SCREEN;
 				}
+			}
+			else {
+				State = STATE_ENTER_CODE;
 			}
 
 			printf("Coords: %d, %d\n", p.x, p.y);
@@ -275,6 +318,9 @@ int main() {
 			if (Graphics_InRectangle(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
 			}
+			else {
+				State = STATE_LOCK_SCREEN;
+			}
 			break;
 		case STATE_DRAW_UNLOCK_SCREEN:
 			Graphics_DrawUnlockScreen();
@@ -285,6 +331,9 @@ int main() {
 			p = TS_GetRelease();
 			if (Graphics_InRectangle(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+			}
+			else {
+				State = STATE_UNLOCK_SCREEN;
 			}
 			break;
 		case STATE_IDLE:
