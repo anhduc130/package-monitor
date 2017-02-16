@@ -32,6 +32,7 @@
 #define STATE_DRAW_UNLOCK_SCREEN	12
 #define STATE_UNLOCK_SCREEN			13
 #define STATE_IDLE					14
+#define STATE_USER_PHONENUM			15
 
 int main() {
 	printf("Starting Program\n");
@@ -64,14 +65,14 @@ int main() {
 	isInitialized = Security_CheckIsRegistered();
 	usleep(20000);
 
-	if(isInitialized)
+	if (isInitialized)
 		printf("Box Already Initialized!\n");
 	else
 		printf("Box Not Initialized!\n");
 
 	Point p;
 	while (1) {
-		switch ((int)State) {
+		switch ((int) State) {
 		case STATE_DRAW_INIT_SCREEN:
 			if (isInitialized) {
 				Graphics_DrawWelcomeScreen();
@@ -81,9 +82,9 @@ int main() {
 				State = STATE_SIGN_UP;
 			}
 			break;
-		/**
-		 * This state draws the sign up screen
-		 */
+			/**
+			 * This state draws the sign up screen
+			 */
 		case STATE_SIGN_UP:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
@@ -93,13 +94,14 @@ int main() {
 				State = STATE_OWNER_PHONENUM;
 			}
 			break;
-		/**
-		 * This state handles the owner registering their phone number
-		 */
+			/**
+			 * This state handles the owner registering their phone number
+			 */
 		case STATE_OWNER_PHONENUM:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
-			button = Graphics_GetNumberPressed(p.x, p.y, PHONENUMLENGTH, Master_Phone_Number, PHONEINDEXLEN);
+			button = Graphics_GetNumberPressed(p.x, p.y, PHONENUMLENGTH,
+					Master_Phone_Number, PHONEINDEXLEN);
 			if (button == NUMPAD_ENTER
 					&& graphics_field_cursor == PHONENUMLENGTH) {
 				Graphics_DrawMasterCodeMenu();
@@ -119,14 +121,45 @@ int main() {
 					Master_Phone_Number[8], Master_Phone_Number[9]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
-		/**
-		 * This state handles the owner typing in their master code
-		 */
+			/**
+			 * This state handles the user registering their phone number
+			 */
+		case STATE_USER_PHONENUM:
+			TS_WaitForRelease();
+			p = TS_GetRelease();
+			button = Graphics_GetNumberPressed(p.x, p.y, PHONENUMLENGTH,
+					User_Phone_Number, PHONEINDEXLEN);
+			if (button == NUMPAD_ENTER
+					&& graphics_field_cursor == PHONENUMLENGTH) {
+				graphics_field_cursor = 0;
+				Graphics_DrawMenu();
+				// Get the values for this device
+				while (Security_ObtainValues() != 0);
+				// Send sms
+				Security_SendSMS();
+				State = STATE_ENTER_CODE;
+			}
+			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
+				State = STATE_DRAW_INIT_SCREEN;
+			}
+			printf("Coords: %d, %d\n", p.x, p.y);
+			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
+			printf("Phone Number: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+					User_Phone_Number[0], User_Phone_Number[1],
+					User_Phone_Number[2], User_Phone_Number[3],
+					User_Phone_Number[4], User_Phone_Number[5],
+					User_Phone_Number[6], User_Phone_Number[7],
+					User_Phone_Number[8], User_Phone_Number[9]);
+			printf("Cursor length: %d\n", graphics_field_cursor);
+			break;
+			//This state handles the owner typing in their master code
 		case STATE_OWNER_MASTERCODE:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
-			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,Master_Code_Input, MASTERINDEXLEN);
-			if (button == NUMPAD_ENTER && graphics_field_cursor == MASTERCODELENGTH) {
+			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,
+					Master_Code_Input, MASTERINDEXLEN);
+			if (button == NUMPAD_ENTER
+					&& graphics_field_cursor == MASTERCODELENGTH) {
 				State = STATE_SEND_MASTERCODE;
 			}
 			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
@@ -135,19 +168,19 @@ int main() {
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
 			printf("Master Code: %d,%d,%d,%d,%d,%d\n", Master_Code_Input[0],
-					Master_Code_Input[1], Master_Code_Input[2], Master_Code_Input[3],
-					Master_Code_Input[4], Master_Code_Input[5]);
+					Master_Code_Input[1], Master_Code_Input[2],
+					Master_Code_Input[3], Master_Code_Input[4],
+					Master_Code_Input[5]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
-		/**
-		 * This state sends the put request for the new user
-		 */
+			//This state sends the put request for the new user
 		case STATE_SEND_MASTERCODE:
 			// Send put request to register the owner
 			Security_RegisterOwner();
 			isInitialized = 1;
 			State = STATE_DRAW_INIT_SCREEN;
 			break;
+			// This state draws the sign in screen and obtains the value for logging in
 		case STATE_SIGN_IN: {
 			TS_WaitForRelease();
 			p = TS_GetRelease();
@@ -156,39 +189,39 @@ int main() {
 				Graphics_DrawMasterCodeMenu();
 				graphics_field_cursor = 0;
 				// Get the values for this device
-				while(Security_ObtainValues() != 0);
+				while (Security_ObtainValues() != 0)
+					;
 				State = STATE_ENTER_MASTER_CODE;
 			}
 
 			if (Graphics_RectangleTouched(p.x, p.y, request_code_rect)) {
-				// Get the values for this device
-				while(Security_ObtainValues() != 0);
 				//Request Code Button was pressed
 				State = STATE_REQUESTED_CODE;
 			}
 			break;
 		}
-		/**
-		 * User has requested to recieve the code
-		 */
+			/**
+			 * User has requested to recieve the code
+			 */
 		case STATE_REQUESTED_CODE:
-			Graphics_DrawMenu();
-			printf("Drawing the menu\n");
+			Graphics_DrawPhoneNumberMenu();
 			graphics_field_cursor = 0;
-			State = STATE_ENTER_CODE;
+			State = STATE_USER_PHONENUM;
 			break;
-		/**
-		 * For the owner as they enter the master code to open the box directly
-		 */
+			/**
+			 * For the owner as they enter the master code to open the box directly
+			 */
 		case STATE_ENTER_MASTER_CODE:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
-			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,Master_Code_Input, MASTERINDEXLEN);
+			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,
+					Master_Code_Input, MASTERINDEXLEN);
 			State = STATE_ENTER_MASTER_CODE;
 
-			if (button == NUMPAD_ENTER && graphics_field_cursor == MASTERCODELENGTH) {
+			if (button == NUMPAD_ENTER
+					&& graphics_field_cursor == MASTERCODELENGTH) {
 				//Check Against Master Code here.
-				if(Security_CheckMasterCode()) {
+				if (Security_CheckMasterCode()) {
 					State = STATE_DRAW_UNLOCK_SCREEN;
 				} else {
 					State = STATE_DRAW_INIT_SCREEN;
@@ -201,17 +234,19 @@ int main() {
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
 			printf("Master Code: %d,%d,%d,%d,%d,%d\n", Master_Code_Input[0],
-					Master_Code_Input[1], Master_Code_Input[2], Master_Code_Input[3],
-					Master_Code_Input[4], Master_Code_Input[5]);
+					Master_Code_Input[1], Master_Code_Input[2],
+					Master_Code_Input[3], Master_Code_Input[4],
+					Master_Code_Input[5]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
-		/**
-		 * State to enter the code
-		 */
+			/**
+			 * State to enter the code
+			 */
 		case STATE_ENTER_CODE:
 			TS_WaitForRelease();
 			p = TS_GetRelease();
-			int button = Graphics_GetNumberPressed(p.x, p.y, CODELENGTH, Security_Code_Input, CODEINDEXLEN);
+			int button = Graphics_GetNumberPressed(p.x, p.y, CODELENGTH,
+					Security_Code_Input, CODEINDEXLEN);
 			State = STATE_ENTER_CODE;
 
 			if (button == NUMPAD_ENTER && graphics_field_cursor == CODELENGTH) {
@@ -224,8 +259,9 @@ int main() {
 
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
-			printf("User Code: %d,%d,%d,%d\n", Security_Code_Input[0], Security_Code_Input[1],
-					Security_Code_Input[2], Security_Code_Input[3]);
+			printf("User Code: %d,%d,%d,%d\n", Security_Code_Input[0],
+					Security_Code_Input[1], Security_Code_Input[2],
+					Security_Code_Input[3]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
 
@@ -256,7 +292,7 @@ int main() {
 			break;
 		default:
 			State = STATE_DRAW_INIT_SCREEN;
-			printf("%d",State);
+			printf("%d", State);
 			printf("SHOUDLN'T BE HERE");
 			break;
 		}

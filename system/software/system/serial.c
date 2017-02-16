@@ -304,22 +304,10 @@ void Wifi_EnsurePut(int pk, const char *masterpw, const char *pw, const char *is
 }
 
 /*****************************************************************************
-* Wait until ready for command
+* Wait Until The User has approved the request
 *****************************************************************************/
-void Wifi_WaitReady(void) {
-	char val = Wifi_ReadRx();
-	if(isascii(val)) {
-		printf("%c",val);
-	}
-	// keep reading the incoming data
-	while(val != '>') {
-		val = Wifi_ReadRx();
-		if(isascii(val)) {
-			printf("%c",val);
-		}
-	}
-	Wifi_SendCommand("\r\n");
-	printf('\n');
+int Wifi_WaitUntilReady() {
+
 }
 
 

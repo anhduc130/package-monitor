@@ -31,6 +31,7 @@
 #define STATE_DRAW_UNLOCK_SCREEN	12
 #define STATE_UNLOCK_SCREEN			13
 #define STATE_IDLE					14
+#define STATE_USER_PHONENUM			15
 
 #define CODE_LENGTH 4
 
@@ -43,12 +44,13 @@ int Security_CheckCode();
 void Security_RegisterOwner();
 int Security_ObtainValues();
 
-int Security_Code[CODELENGTH]; // temporary password
-int Security_Code_Input[CODELENGTH]; // temporary password current input
+volatile int Security_Code[CODELENGTH]; // temporary password
+volatile int Security_Code_Input[CODELENGTH]; // temporary password current input
+volatile int User_Phone_Number[PHONENUMLENGTH];
 
-int Master_Phone_Number[PHONENUMLENGTH]; // owner's phone number
-int Master_Code[MASTERCODELENGTH]; // owner's master code
-int Master_Code_Input[MASTERCODELENGTH]; // owner's master code input
+volatile int Master_Phone_Number[PHONENUMLENGTH]; // owner's phone number
+volatile int Master_Code[MASTERCODELENGTH]; // owner's master code
+volatile int Master_Code_Input[MASTERCODELENGTH]; // owner's master code input
 
 
 #endif /* SECURITY_H_ */

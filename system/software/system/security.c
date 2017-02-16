@@ -114,11 +114,41 @@ int Security_ObtainValues() {
 				Master_Code[4], Master_Code[5]);
 	// Store the master phone number
 	for (i = 0; i < PHONENUMLENGTH; i++) {
-		Master_Phone_Number[i] = phoneNum[i];
+		Master_Phone_Number[i] = phoneNum[i] - '0';
 	}
 
 	printf("Obtained Get Request\n");
 	return 0;
+}
+
+/*****************************************************************************
+* Sends an sms to the owner of the box
+*****************************************************************************/
+int Security_SendSMS() {
+	char buf[128];
+	volatile char phoneNum[11];
+	volatile char userPhoneNum[11];
+	int i;
+
+	printf("Phone Number: %d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+			User_Phone_Number[0], User_Phone_Number[1],
+			User_Phone_Number[2], User_Phone_Number[3],
+			User_Phone_Number[4], User_Phone_Number[5],
+			User_Phone_Number[6], User_Phone_Number[7],
+			User_Phone_Number[8], User_Phone_Number[9]);
+
+	for(i=0;i<10;i++) {
+		phoneNum[i] = Master_Phone_Number[i] + '0';
+		userPhoneNum[i] = User_Phone_Number[i] + '0';
+	}
+	phoneNum[10] = '\0';
+	userPhoneNum[10] = '\0';
+	printf("%s\n",phoneNum);
+	printf("%s\n",userPhoneNum);
+	snprintf(buf, sizeof buf, "send_sms(\"+14387000752\",\"+1%s\",\"Hi a user with phone number %s is requesting to open the box!\")\r\n",phoneNum, userPhoneNum);
+	printf("%s",buf);
+	Wifi_SendCommand(buf);
+	Wifi_ReadResponse();
 }
 
 /*******************************************************************************************
