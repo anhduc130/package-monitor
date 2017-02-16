@@ -17,21 +17,20 @@
 //#define STATE_OPEN         			4
 //#define STATE_DRAW_WELCOME_SCREEN 	5
 //#define STATE_NUMPAD				6
-
-#define STATE_DRAW_INIT_SCREEN		0
-#define STATE_SIGN_UP				1
-#define STATE_OWNER_PHONENUM		2
-#define STATE_OWNER_MASTERCODE		3
-#define STATE_SEND_MASTERCODE		4
-#define STATE_SIGN_IN				5
-#define STATE_ENTER_MASTER_CODE		6
-#define STATE_REQUESTED_CODE		7
-#define STATE_ENTER_CODE			8
-#define STATE_DRAW_LOCK_SCREEN		9
-#define STATE_LOCK_SCREEN			10
-#define STATE_DRAW_UNLOCK_SCREEN	11
-#define STATE_UNLOCK_SCREEN			12
-#define STATE_IDLE					13
+#define STATE_DRAW_INIT_SCREEN		1
+#define STATE_SIGN_UP				2
+#define STATE_OWNER_PHONENUM		3
+#define STATE_OWNER_MASTERCODE		4
+#define STATE_SEND_MASTERCODE		5
+#define STATE_SIGN_IN				6
+#define STATE_ENTER_MASTER_CODE		7
+#define STATE_REQUESTED_CODE		8
+#define STATE_ENTER_CODE			9
+#define STATE_DRAW_LOCK_SCREEN		10
+#define STATE_LOCK_SCREEN			11
+#define STATE_DRAW_UNLOCK_SCREEN	12
+#define STATE_UNLOCK_SCREEN			13
+#define STATE_IDLE					14
 
 #define CODE_LENGTH 4
 
@@ -41,10 +40,17 @@ int Security_CheckCode();
 /**
  * Sends a put request to our server with the user information
  */
-int Security_RegisterOwner();
-int Security_Code[CODE_LENGTH];
-int User_Input[CODE_LENGTH];
-int User_Phone_Number_Input[PHONENUMLENGTH];
-int User_Master_Code[MASTERCODELENGTH];
+void Security_RegisterOwner();
+int Security_ObtainValues();
+
+volatile int State = STATE_DRAW_INIT_SCREEN;
+
+int Security_Code[CODELENGTH]; // temporary password
+int Security_Code_Input[CODELENGTH]; // temporary password current input
+
+int Master_Phone_Number[PHONENUMLENGTH]; // owner's phone number
+int Master_Code[MASTERCODELENGTH]; // owner's master code
+int Master_Code_Input[MASTERCODELENGTH]; // owner's master code input
+
 
 #endif /* SECURITY_H_ */

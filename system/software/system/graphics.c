@@ -34,6 +34,11 @@ int Graphics_ReadAPixel(int x, int y) {
 	return (int) (GraphicsColourReg);
 }
 
+void Graphics_Initialize() {
+	Graphics_InitializeHomeButton();
+	Graphics_InitializeNumberPad();
+}
+
 /****************************************************************************************************
  ** Subroutine to program a hardware (graphics chip) palette number with an RGB value
  ** e.g. ProgramPalette(RED, 0x00FF0000) ;

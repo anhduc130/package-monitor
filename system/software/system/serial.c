@@ -184,15 +184,6 @@ int RS232TestForReceivedData(void) {
 **  START OF WIFI
 *****************************************************************************/
 
-#define BUF_SIZE 512
-#define JSON_SIZE 256
-// Buffer to read the output
-unsigned char rbuf[BUF_SIZE];
-// Buffer containing copy
-unsigned char cbuf[BUF_SIZE];
-// Buffer containing json data
-unsigned char jsonbuf[256];
-
 /*****************************************************************************
 ** Initialise wifi controller
 *****************************************************************************/
@@ -215,8 +206,6 @@ void Wifi_Init(void) {
 		Wifi_SendCommand(" \r\n");
 	}
 
-
-
 	printf("Wifi inititalised\n");
 }
 
@@ -236,7 +225,7 @@ int Wifi_ReadResponse() {
 		}
 	}
 	rbuf[i]='\0';
-	printf("%s\n",jsonbuf);
+	//printf("%s\n",rbuf);
 	return i;
 }
 
@@ -245,6 +234,7 @@ int Wifi_ReadResponse() {
 *****************************************************************************/
 int Wifi_PrintResponse() {
 	printf("%s",rbuf);
+	return 0;
 }
 
 /*****************************************************************************
@@ -275,14 +265,13 @@ void Wifi_ClearBuffer(unsigned char* buf) {
 void Wifi_EnsureConnection() {
 	Wifi_SendCommand("check_wifi()\r\n");
 	Wifi_ReadResponse();
-	printf("%s\n",rbuf);
 	while(strchr(rbuf,'!') == NULL) {
 		// Go to sleep and try again in a bit
 		usleep(500000);
 		Wifi_SendCommand("check_wifi()\r\n");
 		Wifi_ReadResponse();
-		printf("%s\n",rbuf);
 	}
+	printf("%s\n",rbuf);
 }
 
 /*****************************************************************************
@@ -293,13 +282,10 @@ void Wifi_EnsureGet(int pk) {
 	snprintf(buf, sizeof buf, "send_get(%d)\r\n", pk);
 	Wifi_SendCommand(buf);
 	Wifi_ReadResponse();
-	while(Wifi_ExtractJson(rbuf, jsonbuf) == EJSON && strlen(jsonbuf) != 79) {
+	while(Wifi_ExtractJson(rbuf, jsonbuf) == EJSON && strlen(jsonbuf) < 78) {
 		Wifi_SendCommand(buf);
 		Wifi_ReadResponse();
 	}
-
-	printf("JSON GET BUFFER BELOW:\n");
-	printf("%s\n",jsonbuf);
 }
 
 /*****************************************************************************
@@ -311,13 +297,10 @@ void Wifi_EnsurePut(int pk, const char *masterpw, const char *pw, const char *is
 	snprintf(buf, sizeof buf, "send_put(%d,\"%s\",\"%s\",\"%s\",\"%s\")\r\n", pk, masterpw, pw, isconfirmed, phonenum);
 	Wifi_SendCommand(buf);
 	Wifi_ReadResponse();
-	while(Wifi_ExtractJson(rbuf, jsonbuf) == EJSON && strlen(jsonbuf) != 79) {
+	while(Wifi_ExtractJson(rbuf, jsonbuf) == EJSON) {
 		Wifi_SendCommand(buf);
 		Wifi_ReadResponse();
 	}
-
-	printf("JSON PUT BUFFER BELOW:\n");
-	printf("%s\n",jsonbuf);
 }
 
 /*****************************************************************************
@@ -393,6 +376,7 @@ int Wifi_ExtractJson(char *src, char *dst) {
 	// copy the substring
 	memcpy(dst, &src[leftindex+1], diff-1);
 	dst[diff] = '\0';
+	return 0;
 }
 
 /*****************************************************************************
@@ -413,13 +397,14 @@ int Wifi_ParsePhoneNumber(char *src, char *dst) {
 
 	char *colon = strchr(res[PHONENUM_INDEX],':');
 	if(colon == NULL) {
-  	free(copy);
-  	return EPHN;
+		free(copy);
+		return EPHN;
 	}
 
 	int colonIndex = (int)(colon - res[PHONENUM_INDEX]);
 	memcpy(dst, res[PHONENUM_INDEX] + colonIndex + 2, 10);
 	dst[10]='\0';
+	free(copy);
 	return 0;
 }
 
@@ -440,12 +425,15 @@ int Wifi_ParsePw(char *src, char *dst) {
 	}
 
 	char *colon = strchr(res[PW_INDEX],':');
-	if(colon == NULL)
-   	return EPW;
+	if(colon == NULL) {
+		free(copy);
+		return EPW;
+	}
 
 	int colonIndex = (int)(colon - res[PW_INDEX]);
 	memcpy(dst, res[PW_INDEX] + colonIndex + 2, 4);
 	dst[4]='\0';
+	free(copy);
 	return 0;
 }
 
@@ -453,7 +441,7 @@ int Wifi_ParsePw(char *src, char *dst) {
 * Parse out the master password from response
 *****************************************************************************/
 int Wifi_ParseMasterPw(char *src, char *dst) {
-	char *copy = malloc(sizeof(char)*6);
+	char *copy = (char*)malloc(sizeof(char)*6);
 	strcpy(copy, src);
 
 	char *res[NPARAMS];
@@ -461,17 +449,19 @@ int Wifi_ParseMasterPw(char *src, char *dst) {
 	int i = 0;
 
 	while(p != NULL) {
-   	res[i++] = p;
-  	p = strtok(NULL,",");
+		res[i++] = p;
+		p = strtok(NULL,",");
 	}
 
 	char *colon = strchr(res[PWMASTER_INDEX],':');
-	if(colon == NULL)
-  	return EPWMAS;
-
+	if(colon == NULL) {
+		free(copy);
+		return EPWMAS;
+	}
 	int colonIndex = (int)(colon - res[PWMASTER_INDEX]);
 	memcpy(dst, res[PWMASTER_INDEX] + colonIndex + 2, 6);
 	dst[6]='\0';
+	free(copy);
 	return 0;
 }
 
@@ -479,7 +469,7 @@ int Wifi_ParseMasterPw(char *src, char *dst) {
 * Parse out confirmed from response
 *****************************************************************************/
 int Wifi_ParseConfirmed(char *src, char *dst) {
-	char *copy = malloc(sizeof(char)*5);
+	char *copy = (char*)malloc(sizeof(char)*5);
 	strcpy(copy, src);
 
 	char *res[NPARAMS];
@@ -498,6 +488,7 @@ int Wifi_ParseConfirmed(char *src, char *dst) {
 	int colonIndex = (int)(colon - res[CONFIRM_INDEX]);
 	memcpy(dst, res[CONFIRM_INDEX] + colonIndex + 1, 5);
 	dst[5]='\0';
+	free(copy);
 	return 0;
 }
 

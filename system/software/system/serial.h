@@ -132,6 +132,15 @@ void TS_WriteTx(char val);
 #define EPWMAS  4 // master password not found
 #define EPCNF   5 // confirmed not found
 
+#define BUF_SIZE 512
+#define JSON_SIZE 128
+// Buffer to read the output
+volatile unsigned char rbuf[BUF_SIZE];
+// Buffer containing copy
+volatile unsigned char cbuf[BUF_SIZE];
+// Buffer containing json data
+volatile unsigned char jsonbuf[JSON_SIZE];
+
 /*****************************************************************************
 ** Initialise wifi controller
 *****************************************************************************/

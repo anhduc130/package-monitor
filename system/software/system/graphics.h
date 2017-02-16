@@ -88,7 +88,7 @@ Rectangle_t* request_code_rect;
 Rectangle_t* sign_up_rect;
 Rectangle_t* log_in_rect;
 Rectangle_t* home_button_rect;
-int graphics_field_cursor;
+volatile int graphics_field_cursor;
 
 
 /*******************************************************************************************
@@ -132,6 +132,8 @@ void Graphics_DrawNumPad();
 void Graphics_DrawPhoneNumberMenu();
 void Graphics_DrawMasterCodeMenu();
 void Graphics_DrawUserEnteredDigit(int index, int digitVal, int colour, int codeIndexLength);
+// Initialize the graphics
+void Graphics_Initialize();
 
 void Graphics_Font5x7(int x, int y, int fontcolour, int backgroundcolour,int c, int Erase);
 void Graphics_Font10x14(int x, int y, int colour, int backgroundcolour, int c, int Erase);
