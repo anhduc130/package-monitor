@@ -43,8 +43,6 @@ int Security_CheckCode();
 void Security_RegisterOwner();
 int Security_ObtainValues();
 
-volatile int State = STATE_DRAW_INIT_SCREEN;
-
 int Security_Code[CODELENGTH]; // temporary password
 int Security_Code_Input[CODELENGTH]; // temporary password current input
 

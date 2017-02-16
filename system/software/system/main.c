@@ -41,7 +41,8 @@ int main() {
 	TS_Init();
 	Graphics_Initialize();
 
-	int isInitialized = 0;
+	volatile int State = STATE_DRAW_INIT_SCREEN;
+	volatile int isInitialized = 0;
 	volatile int button;
 
 	/**
@@ -60,12 +61,8 @@ int main() {
 	usleep(500000);
 
 	// Check if the box has been initialized already
-	do {
-		isInitialized = Security_CheckIsRegistered();
-		usleep(20000);
-	} while (isInitialized == EPWMAS);
-
-	isInitialized = 0;
+	isInitialized = Security_CheckIsRegistered();
+	usleep(20000);
 
 	if(isInitialized)
 		printf("Box Already Initialized!\n");
@@ -74,7 +71,7 @@ int main() {
 
 	Point p;
 	while (1) {
-		switch (State) {
+		switch ((int)State) {
 		case STATE_DRAW_INIT_SCREEN:
 			if (isInitialized) {
 				Graphics_DrawWelcomeScreen();
@@ -187,15 +184,20 @@ int main() {
 			TS_WaitForRelease();
 			p = TS_GetRelease();
 			button = Graphics_GetNumberPressed(p.x, p.y, MASTERCODELENGTH,Master_Code_Input, MASTERINDEXLEN);
+			State = STATE_ENTER_MASTER_CODE;
+
 			if (button == NUMPAD_ENTER && graphics_field_cursor == MASTERCODELENGTH) {
 				//Check Against Master Code here.
 				if(Security_CheckMasterCode()) {
 					State = STATE_DRAW_UNLOCK_SCREEN;
+				} else {
+					State = STATE_DRAW_INIT_SCREEN;
 				}
 			}
 			if (Graphics_RectangleTouched(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
 			}
+
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
 			printf("Master Code: %d,%d,%d,%d,%d,%d\n", Master_Code_Input[0],
@@ -210,19 +212,23 @@ int main() {
 			TS_WaitForRelease();
 			p = TS_GetRelease();
 			int button = Graphics_GetNumberPressed(p.x, p.y, CODELENGTH, Security_Code_Input, CODEINDEXLEN);
-			if (button == NUMPAD_ENTER) {
+			State = STATE_ENTER_CODE;
+
+			if (button == NUMPAD_ENTER && graphics_field_cursor == CODELENGTH) {
 				if (Security_CheckCode()) {
 					State = STATE_DRAW_UNLOCK_SCREEN;
 				} else {
 					State = STATE_DRAW_LOCK_SCREEN;
 				}
 			}
+
 			printf("Coords: %d, %d\n", p.x, p.y);
 			printf("Button num: %d\n", Graphics_ButtonNumToNum(button));
 			printf("User Code: %d,%d,%d,%d\n", Security_Code_Input[0], Security_Code_Input[1],
 					Security_Code_Input[2], Security_Code_Input[3]);
 			printf("Cursor length: %d\n", graphics_field_cursor);
 			break;
+
 		case STATE_DRAW_LOCK_SCREEN:
 			Graphics_DrawLockScreen();
 			State = STATE_LOCK_SCREEN;
@@ -249,12 +255,11 @@ int main() {
 			printf("I'm in state idle...\n");
 			break;
 		default:
+			State = STATE_DRAW_INIT_SCREEN;
 			printf("%d",State);
 			printf("SHOUDLN'T BE HERE");
 			break;
 		}
 	}
-	Leds_Celebrate();
-
 	return 0;
 }

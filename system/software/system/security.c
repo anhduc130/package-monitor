@@ -103,12 +103,15 @@ int Security_ObtainValues() {
 	int i;
 	// Store the temporary password
 	for (i = 0; i < CODELENGTH; i++) {
-		Security_Code[i] = tempPw[i];
+		Security_Code[i] = tempPw[i]  - '0';
 	}
 	// Store the master password
 	for (i = 0; i < MASTERCODELENGTH; i++) {
-		Master_Code[i] = masterPw[i];
+		Master_Code[i] = masterPw[i] - '0';
 	}
+	printf("Master After Obtaining values Code: %d,%d,%d,%d,%d,%d\n", Master_Code[0],
+				Master_Code[1], Master_Code[2], Master_Code[3],
+				Master_Code[4], Master_Code[5]);
 	// Store the master phone number
 	for (i = 0; i < PHONENUMLENGTH; i++) {
 		Master_Phone_Number[i] = phoneNum[i];
@@ -134,6 +137,12 @@ void Security_CheckIsConfirmed() {
  *******************************************************************************************/
 int Security_CheckMasterCode() {
 	int i;
+	printf("Master Code Input: %d,%d,%d,%d,%d,%d\n", Master_Code_Input[0],
+						Master_Code_Input[1], Master_Code_Input[2], Master_Code_Input[3],
+						Master_Code_Input[4], Master_Code_Input[5]);
+	printf("Master Code: %d,%d,%d,%d,%d,%d\n", Master_Code[0],
+			Master_Code[1], Master_Code[2], Master_Code[3],
+			Master_Code[4], Master_Code[5]);
 	for (i = 0; i < MASTERCODELENGTH; i++) {
 		if (Master_Code[i] != Master_Code_Input[i]) {
 			// Codes do not match
@@ -155,11 +164,6 @@ int Security_CheckIsRegistered() {
 	// Json buf should now be valid
 	char masterPw[MASTERCODELENGTH];
 	Wifi_ParseMasterPw(jsonbuf, masterPw);
-
-	// Check to make sure we got the right master password
-	if (!isdigit(masterPw[MASTERCODELENGTH-1])) {
-		return EPWMAS;
-	}
 
 	return masterPw[0] != 'a';
 }
