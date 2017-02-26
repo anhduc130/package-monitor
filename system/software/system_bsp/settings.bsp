@@ -2,9 +2,9 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Feb 15, 2017 10:41:44 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1487227304630</BspGeneratedUnixTimeStamp>
-        <BspGeneratedLocation>E:\package-monitor\system\software\system_bsp</BspGeneratedLocation>
+        <BspGeneratedTimeStamp>16-Feb-2017 5:41:52 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1487295712620</BspGeneratedUnixTimeStamp>
+        <BspGeneratedLocation>D:\Documents\UBC\CPEN_391\Repository\package-monitor\system\software\system_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>..\..\nios_system.sopcinfo</SopcDesignFile>
         <JdiFile>default</JdiFile>
@@ -886,6 +886,12 @@
                 <Enabled>false</Enabled>
                 <Group xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
         </Setting>
+        <MemoryMap>
+                <slaveDescriptor>control_in</slaveDescriptor>
+                <addressRange>0x00000010 - 0x0000001F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
+        </MemoryMap>
         <MemoryMap>
                 <slaveDescriptor>switches</slaveDescriptor>
                 <addressRange>0x00002000 - 0x0000200F</addressRange>

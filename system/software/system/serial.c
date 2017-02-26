@@ -371,7 +371,8 @@ int Wifi_ExtractJson(char *src, char *dst) {
 * Parse out the phone number from response
 *****************************************************************************/
 int Wifi_ParsePhoneNumber(char *src, char *dst) {
-	char *copy = (char *)malloc(16);
+	char *copy = (char *)malloc(80);
+	//char copy[16];
 	strcpy(copy, src);
 
 	char *res[NPARAMS];
@@ -400,7 +401,8 @@ int Wifi_ParsePhoneNumber(char *src, char *dst) {
 * Parse out the password from response
 *****************************************************************************/
 int Wifi_ParsePw(char *src, char *dst) {
-	char *copy = malloc(sizeof(char)*4);
+	char *copy = (char *)malloc(80);
+	//char copy[4];
 	strcpy(copy, src);
 
 	char *res[NPARAMS];
@@ -414,14 +416,14 @@ int Wifi_ParsePw(char *src, char *dst) {
 
 	char *colon = strchr(res[PW_INDEX],':');
 	if(colon == NULL) {
-		free(copy);
+		//free(copy);
 		return EPW;
 	}
 
 	int colonIndex = (int)(colon - res[PW_INDEX]);
 	memcpy(dst, res[PW_INDEX] + colonIndex + 2, 4);
 	dst[4]='\0';
-	free(copy);
+	//free(copy);
 	return 0;
 }
 
@@ -429,7 +431,8 @@ int Wifi_ParsePw(char *src, char *dst) {
 * Parse out the master password from response
 *****************************************************************************/
 int Wifi_ParseMasterPw(char *src, char *dst) {
-	char *copy = (char*)malloc(sizeof(char)*6);
+	char *copy = (char *)malloc(80);
+	//char copy[6];
 	strcpy(copy, src);
 
 	char *res[NPARAMS];
@@ -443,13 +446,13 @@ int Wifi_ParseMasterPw(char *src, char *dst) {
 
 	char *colon = strchr(res[PWMASTER_INDEX],':');
 	if(colon == NULL) {
-		free(copy);
+		//free(copy);
 		return EPWMAS;
 	}
 	int colonIndex = (int)(colon - res[PWMASTER_INDEX]);
 	memcpy(dst, res[PWMASTER_INDEX] + colonIndex + 2, 6);
 	dst[6]='\0';
-	free(copy);
+	//free(copy);
 	return 0;
 }
 
@@ -457,7 +460,8 @@ int Wifi_ParseMasterPw(char *src, char *dst) {
 * Parse out confirmed from response
 *****************************************************************************/
 int Wifi_ParseConfirmed(char *src, char *dst) {
-	char *copy = (char*)malloc(sizeof(char)*5);
+	char *copy = (char *)malloc(80);
+	//char copy[5];
 	strcpy(copy, src);
 
 	char *res[NPARAMS];

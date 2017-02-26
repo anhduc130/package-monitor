@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2_qsys_0' in SOPC Builder design 'nios_system'
  * SOPC Builder design path: ../../nios_system.sopcinfo
  *
- * Generated: Wed Feb 15 09:54:13 PST 2017
+ * Generated: Thu Feb 16 10:26:14 PST 2017
  */
 
 /*
@@ -288,6 +288,33 @@
 #define CHARACTER_LCD_0_NAME "/dev/character_lcd_0"
 #define CHARACTER_LCD_0_SPAN 2
 #define CHARACTER_LCD_0_TYPE "altera_up_avalon_character_lcd"
+
+
+/*
+ * control_in configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_control_in altera_avalon_pio
+#define CONTROL_IN_BASE 0x10
+#define CONTROL_IN_BIT_CLEARING_EDGE_REGISTER 0
+#define CONTROL_IN_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define CONTROL_IN_CAPTURE 0
+#define CONTROL_IN_DATA_WIDTH 1
+#define CONTROL_IN_DO_TEST_BENCH_WIRING 0
+#define CONTROL_IN_DRIVEN_SIM_VALUE 0
+#define CONTROL_IN_EDGE_TYPE "NONE"
+#define CONTROL_IN_FREQ 50000000
+#define CONTROL_IN_HAS_IN 0
+#define CONTROL_IN_HAS_OUT 1
+#define CONTROL_IN_HAS_TRI 0
+#define CONTROL_IN_IRQ -1
+#define CONTROL_IN_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define CONTROL_IN_IRQ_TYPE "NONE"
+#define CONTROL_IN_NAME "/dev/control_in"
+#define CONTROL_IN_RESET_VALUE 0
+#define CONTROL_IN_SPAN 16
+#define CONTROL_IN_TYPE "altera_avalon_pio"
 
 
 /*

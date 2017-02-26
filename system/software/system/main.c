@@ -18,21 +18,7 @@
 #include "graphics.h"
 #include "security.h"
 
-//#define STATE_DRAW_INIT_SCREEN		1
-//#define STATE_SIGN_UP				2
-//#define STATE_OWNER_PHONENUM		3
-//#define STATE_OWNER_MASTERCODE		4
-//#define STATE_SEND_MASTERCODE		5
-//#define STATE_SIGN_IN				6
-//#define STATE_ENTER_MASTER_CODE		7
-//#define STATE_REQUESTED_CODE		8
-//#define STATE_ENTER_CODE			9
-//#define STATE_DRAW_LOCK_SCREEN		10
-//#define STATE_LOCK_SCREEN			11
-//#define STATE_DRAW_UNLOCK_SCREEN	12
-//#define STATE_UNLOCK_SCREEN			13
-//#define STATE_IDLE					14
-//#define STATE_USER_PHONENUM			15
+#define lock (volatile char*) 0x00000010
 
 int main() {
 	printf("Starting Program\n");
@@ -47,6 +33,7 @@ int main() {
 	int button;
 	int isConfirmed = 0;
 	int approved;
+	*lock = 1;
 
 	/**
 	 * Send the wifi command
@@ -100,6 +87,7 @@ int main() {
 			break;
 			// In this state we wait to get approved once we do we get sent the text message with the temporary code
 		case STATE_WAIT_APPROVED:
+			//usleep(1000000);
 			approved = Security_WaitApproved();
 			// We loop inside this state
 			if (approved) {
@@ -164,8 +152,7 @@ int main() {
 				graphics_field_cursor = 0;
 				Graphics_DrawMenu();
 				// Get the values for this device
-				while (Security_ObtainValues() != 0)
-					;
+				while (Security_ObtainValues() != 0);
 				// Send sms
 				Security_SendSMS();
 				// Go to wait to be approved
@@ -310,6 +297,7 @@ int main() {
 
 		case STATE_DRAW_LOCK_SCREEN:
 			Graphics_DrawLockScreen();
+			*lock = 1;
 			State = STATE_LOCK_SCREEN;
 			break;
 		case STATE_LOCK_SCREEN:
@@ -317,6 +305,7 @@ int main() {
 			p = TS_GetRelease();
 			if (Graphics_InRectangle(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+				*lock = 1;
 			}
 			else {
 				State = STATE_LOCK_SCREEN;
@@ -324,6 +313,7 @@ int main() {
 			break;
 		case STATE_DRAW_UNLOCK_SCREEN:
 			Graphics_DrawUnlockScreen();
+			*lock = 0;
 			State = STATE_UNLOCK_SCREEN;
 			break;
 		case STATE_UNLOCK_SCREEN:
@@ -331,6 +321,7 @@ int main() {
 			p = TS_GetRelease();
 			if (Graphics_InRectangle(p.x, p.y, home_button_rect)) {
 				State = STATE_DRAW_INIT_SCREEN;
+				*lock = 1;
 			}
 			else {
 				State = STATE_UNLOCK_SCREEN;

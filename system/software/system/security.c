@@ -76,7 +76,7 @@ int Security_ObtainValues() {
 	// Json buf should now be valid
 
 	// Parse the master pw
-	unsigned char masterPw[MASTERCODELENGTH];
+	char *masterPw = malloc(sizeof(char) * MASTERCODELENGTH);
 	Wifi_ParseMasterPw(jsonbuf, masterPw);
 	if (!isdigit(masterPw[MASTERCODELENGTH-1])) {
 		return EPWMAS; // master password not found
@@ -84,7 +84,7 @@ int Security_ObtainValues() {
 	printf("Master pw: %s\n", masterPw);
 
 	// Parse the pw
-	unsigned char tempPw[CODELENGTH];
+	char* tempPw = malloc(sizeof(char)*CODELENGTH);
 	Wifi_ParsePw(jsonbuf, tempPw);
 	if (!isdigit(tempPw[CODELENGTH-1])) {
 		return EPW; // password not found
@@ -92,7 +92,7 @@ int Security_ObtainValues() {
 	printf("Temp pw: %s\n", tempPw);
 
 	// Parse the phone number
-	unsigned char phoneNum[PHONENUMLENGTH];
+	char * phoneNum = malloc(sizeof(char)*PHONENUMLENGTH);
 	Wifi_ParsePhoneNumber(jsonbuf, phoneNum);
 	if (!isdigit(phoneNum[PHONENUMLENGTH-1])) {
 		return EPHN; // phone number not found
@@ -109,14 +109,18 @@ int Security_ObtainValues() {
 	for (i = 0; i < MASTERCODELENGTH; i++) {
 		Master_Code[i] = masterPw[i] - '0';
 	}
-	printf("Master After Obtaining values Code: %d,%d,%d,%d,%d,%d\n", Master_Code[0],
-				Master_Code[1], Master_Code[2], Master_Code[3],
-				Master_Code[4], Master_Code[5]);
 	// Store the master phone number
 	for (i = 0; i < PHONENUMLENGTH; i++) {
 		Master_Phone_Number[i] = phoneNum[i] - '0';
 	}
 
+	free(masterPw);
+	free(tempPw);
+	free(phoneNum);
+
+	printf("Master After Obtaining values Code: %d,%d,%d,%d,%d,%d\n", Master_Code[0],
+				Master_Code[1], Master_Code[2], Master_Code[3],
+				Master_Code[4], Master_Code[5]);
 	printf("Obtained Get Request\n");
 	return 0;
 }
@@ -189,12 +193,15 @@ int Security_WaitApproved() {
 	// Send out the code for this box
 	Wifi_EnsureGet(1);
 	// Json buf should now be valid
-	char isConfirmed[MASTERCODELENGTH];
+	char* isConfirmed = malloc(sizeof(char)*MASTERCODELENGTH);
 	Wifi_ParseConfirmed(jsonbuf, isConfirmed);
-
 	printf("%s\n",isConfirmed);
+
+	int b = isConfirmed[0] == 't';
+
+	free(isConfirmed);
 	// Check if value is true
-	return isConfirmed[0] == 't';
+	return b;
 }
 
 /*******************************************************************************************
@@ -228,10 +235,11 @@ int Security_CheckIsRegistered() {
 	// Send out the code for this box
 	Wifi_EnsureGet(1);
 	// Json buf should now be valid
-	char masterPw[MASTERCODELENGTH];
+	char *masterPw = malloc(sizeof(char)*MASTERCODELENGTH);
 	Wifi_ParseMasterPw(jsonbuf, masterPw);
-
-	return masterPw[0] != 'a';
+	int isReg = masterPw[0] != 'a';
+	free(masterPw);
+	return isReg;
 }
 
 /*******************************************************************************************
