@@ -151,6 +151,7 @@ C_SRCS += graphics.c
 C_SRCS += fonts.c
 C_SRCS += security.c
 C_SRCS += fontParser.c
+C_SRCS += camera.c
 CXX_SRCS :=
 ASM_SRCS :=
 
