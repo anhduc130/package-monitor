@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Feb 14, 2017 6:35:49 PM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1487126149545</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Feb 28, 2017 4:17:27 PM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1488327447300</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\altera\15.0\Quartus-web-15.0\Projects\cpen391\package-monitor\system\software\camera-module-testing_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>..\..\nios_system.sopcinfo</SopcDesignFile>

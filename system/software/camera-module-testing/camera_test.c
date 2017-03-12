@@ -2,7 +2,7 @@
  * main.c
  *
  *  Created on: Jan 21, 2017
- *      Author: David Jung
+ *      Author: Andrew Bui
  */
 
 #include <stdio.h>
@@ -13,57 +13,68 @@
 #include "camera.h"
 
 int main() {
-	// Draw the number pad
-
 	printf("Starting Camera Testing\n");
+	uint8_t byte;
 
-	// Initialize Hardware
+	// Initialize the camera
 	Camera_Init();
 
-	usleep(100000);
-
-	// Try to locate the camera
-	if (reset()) {
-		printf("Camera Found\n");
-	} else {
-		printf("No camera found\n");
-		return 1;
+	while((Camera_Status & 0x01) == 0x01){
+		byte = Camera_RxData;
 	}
 
-	setImageSize(VC0706_320x240);        // medium
+	//usleep(1000000);
+	reset();
 
-	printf("Taking picture in 1 second...\n");
-	usleep(100000);
-
-	if (takePicture()) {
-		printf("Picture taken!\n");
-	} else {
-		printf("Failed to capture\n");
-		return 2;
+	/*
+	usleep(10000);
+	if(!changeImageSize()){
+		printf("Error: Can't change the image size");
 	}
 
-	uint32_t jpglen = frameLength();
-	printf("Jpeg Length %u\n", jpglen);
 
-	int numcols = 0;
-	int counter = 0;
-	while (jpglen > 0) {
-		// read 32 bytes at a time;
-		uint8_t *buffer;
-		uint8_t bytesToRead = 32 < jpglen ? 32 : jpglen; // change 32 to 64 for a speedup but may not work with all setups!
-		buffer = readPicture(bytesToRead);
+	usleep(10000);
+	if(!changeBaudRate()){
+		printf("Error: Can't change the baud rate");
+	}
+	
+	while((Camera_Status & 0x01) == 0x01){
+		byte = Camera_RxData;
+	}
+	*/
+	usleep(5000000);
+	takePicture();
 
-		int i;
-		for (i = 0; i < jpglen; i++) {
-			printf("%x,", buffer[i]);
-			counter++;
-			if (counter % 320 == 0) {
-				printf("\n");
-			}
+	while((Camera_Status & 0x01) == 0x01){
+		byte = Camera_RxData;
+	}
 
+	usleep(1000000);
+	getImageLength();
+
+	while((Camera_Status & 0x01) == 0x01){
+		byte = Camera_RxData;
+	}
+	
+	usleep(100000);
+	readImage();
+
+	while((Camera_Status & 0x01) == 0x01){
+		byte = Camera_RxData;
+	}
+
+	usleep(1000000);
+	stopTakingImage();
+
+	// Send the data to the server now
+	/*
+	int i;
+	for (i = 0; i <= imageLengthInt; i++){
+		if(cameraImage[i] < 0x10){
+			printf("0");
 		}
-		jpglen -= bytesToRead;
+    	printf("%X ", (uint8_t) cameraImage[i]);
 	}
-
+	*/
 	return 0;
 }
